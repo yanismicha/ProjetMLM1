@@ -56,7 +56,7 @@ dt=dt[dt.age.!="NA",:]
 #je transofrme la variable age en vecteur d'entier
 dt.age=parse.(Int64, dt.age)
 
-map_to_String(s) = length(s) == 2 ? "Autres" : SubString(s,1:3) == "Ama" ? "Ama Dablam" : SubString(s,1:3) == "Sha" ? "Sharphu" : SubString(s,1:3) == "Ann" ? "Annapurna" : SubString(s,1:3) == "Dha" ? "Dhaulagiri" : SubString(s,1:3) == "Mak" ? "Makalu" : SubString(s,1:3) == "Gan" ? "Ganesh" : "Autres"
+map_to_String(s) = length(s) == 2 ? "Autres" : SubString(s,1:3) == "Ama" ? "Ama Dablam" : SubString(s,1:3) == "Sha" ? "Sharphu" : SubString(s,1:3) == "Ann" ? "Annapurna" : SubString(s,1:3) == "Dha" ? "Dhaulagiri" : SubString(s,1:3) == "Mak" ? "Makalu" : SubString(s,1:3) == "Gan" ? "Ganesh" : SubString(s,1:3) == "Eve" ? "Everest" : SubString(s,1:3) == "Kan" ? "Kangchen" : SubString(s,1:3) == "Pum" ? "Pumori" : SubString(s,1:3) == "Bar" ? "Baruntse" : SubString(s,1:3) == "Lho" ? "Lhotse" : SubString(s,1:3) == "Man" ? "Manaslu" : SubString(s,1:3) == "Cho" ? "Cho" : "Autres"
 transform!(dt, :peak_name => ByRow(map_to_String) => :peak_name)
 dtClean=dt[!,[1,2,4,5,6,7,8,9,10,11,13,14,15,16,19]]
 
@@ -75,6 +75,34 @@ function drop!(dt::DataFrame,g::Function) #permet de drop toute les lignes qui n
 end
 #v2
 g(x)= x isa AbstractString && x=="NA"
-filter(r -> all(!g,r),dt) #je filtre par ligne r , et je garde tout celles qui ne sastifassent pas la condition
-dtClean
-CSV.write("ProjetsLogSpe/DataSets/membersClean.csv",dtClean)
+filter(r -> all(!g,r),dtClean) #je filtre par ligne r , et je garde tout celles qui ne sastifassent pas la condition
+dtClean=filter(r -> all(!g,r),dtClean) 
+CSV.write("DataSets/membersClean.csv",dtClean)
+dtFinal=CSV.File(Downloads.download("https://www.dropbox.com/scl/fi/5gdv6tjn0ojbl1q9d354e/membersClean.csv?rlkey=3x35c1wp23774vk0vr0iygp6c&dl=0")) |> DataFrame
+
+#partie stat
+counts = combine(groupby(dtFinal, :peak_name), nrow)  #permet d'avoir le nombre de valeurs prises pour chaque modalités
+counts=sort(counts,[order(:nrow)]) #je l'odronne pour que ce soir plus lisible
+bar(counts.peak_name, counts.nrow, xlabel="Modalité", ylabel="Nombre de valeurs", legend=false)
+
+
+
+using StatsPlots
+using DataFrames
+df = dtFinal
+@df df plot(:peak_name,:age)
+@df df scatter(:age,:peak_name,title="My DataFrame Scatter Plot!")
+#variable age
+boxplot(df.age)
+using StatsBase #pour utiliser les tables de frequence
+countsAge = combine(groupby(dtFinal, :age), nrow)  #permet d'avoir le nombre de valeurs prises pour chaque modalités
+classe_age = [0, 20,30,40,50,60,70,80,90,100]
+using CategoricalArrays,FreqTables
+
+df.age=cut(df.age,classe_age)
+countsAge = combine(groupby(df, :age), nrow=> :Freq)#tab des frequences en dataframe
+freqAge=freqtable(df,:age)#ou en vecteur
+prop=round.(freqAge/length(dt.age)*100,digits=2)
+# Créez un graphique à barres des proportions
+proportions = collect(prop)
+bar(classe_age, proportions, xlabel="Catégorie d'âge", ylabel="% Proportion", legend=false)
