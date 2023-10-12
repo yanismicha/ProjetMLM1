@@ -25,45 +25,29 @@ using ScikitLearn.GridSearch: GridSearchCV
 #partie ml.jl
 using MLJ
 using MLJ: fit!
-X=dtFinal[!,quantitative_feature]
-y=dtFinal.died
-KNNClassifier = @load KNNClassifier pkg=NearestNeighborModels
-model = KNNClassifier()
+dtFinal=CSV.File(Downloads.download("https://www.dropbox.com/scl/fi/5gdv6tjn0ojbl1q9d354e/membersClean.csv?rlkey=3x35c1wp23774vk0vr0iygp6c&dl=0")) |> DataFrame
+y,X=unpack(dtFinal, ==(:died), in([:year, :age]); rng=123)
+X = coerce(X,:age=>Continuous, :year=>Continuous)
+schema(X)
+y=coerce(y,OrderedFactor)
+ms = models(matching(X, y))
+KNN=@load KNNClassifier
+knn=KNN()
+mach = machine(knn, X, y) |> fit!
+evaluate!(mach, resampling=CV(nfolds=5, shuffle=true, rng=1234),
+          measure=[Accuracy()])
 
-X.age=coerce(X.age,Continuous)
-X.year=coerce(X.year,Continuous)#obligé de changer de type pour le modele
-mach = machine(model, X, y)
-y=coerce(y,Finite)
-test, train = partition(eachindex(y), 0.75, shuffle=true)
-fit!(mach,rows=train)
-yhat = predict(mach, X[test, :])
+K = EnsembleModel(model=knn, n=300)
+r1 = range(K, :(model.K), lower=3, upper=10)
+          tuned_k = TunedModel(model=K,
+                                    tuning=Grid(resolution=12),
+                                    resampling=CV(nfolds=6),
+                                    ranges=[r1],
+                                    measure=Accuracy())        
+                                    
+          mach = machine(tuned_k, X, y) |> fit!
 
-prob = map(x->x.prob_given_ref[2], yhat)
+F = fitted_params(mach)
+best_model=F.best_model
+          
 
-scorae = LogLoss(tol=1e-4)(yhat, y[test])
-
-plot(scatter(
-
-    mode="markers",
-
-    X[test,:], x=:x1,y=:x2,
-
-    marker=attr(
-
-        color=prob,
-
-        coloraxis="coloraxis",
-
-        size=12,
-
-        line_width=1.5,
-
-        symbol=y[test],
-
-        cmin=minimum(prob),
-
-        cmax=maximum(prob)
-
-    )
-
-), Layout(showlegend=true, coloraxis_colorscale=colors.RdBu_8))
