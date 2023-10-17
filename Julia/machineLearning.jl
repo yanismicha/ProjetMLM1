@@ -23,14 +23,17 @@ using ScikitLearn.GridSearch: GridSearchCV
 
 
 #partie ml.jl
-using MLJ
+using MLJ,CSV,Downloads,DataFrames
 using MLJ: fit!
 dtFinal=CSV.File(Downloads.download("https://www.dropbox.com/scl/fi/5gdv6tjn0ojbl1q9d354e/membersClean.csv?rlkey=3x35c1wp23774vk0vr0iygp6c&dl=0")) |> DataFrame
 y,X=unpack(dtFinal, ==(:died), in([:year, :age]); rng=123)
 X = coerce(X,:age=>Continuous, :year=>Continuous)
 schema(X)
 y=coerce(y,OrderedFactor)
+
 ms = models(matching(X, y))
+
+#knnclassfier
 KNN=@load KNNClassifier
 knn=KNN()
 mach = machine(knn, X, y) |> fit!
@@ -50,4 +53,16 @@ r1 = range(K, :(model.K), lower=3, upper=10)
 F = fitted_params(mach)
 best_model=F.best_model
           
+#DecisionTree
+Tree=@load DecisionTreeClassifier pkg=DecisionTree
+tree=Tree()
+mach = machine(tree, X, y) |> fit!
+evaluate!(mach, resampling=CV(nfolds=5, shuffle=true, rng=1234),
+          measure=[Accuracy()])
+train, test = partition(eachindex(y), 0.7);
+mach = machine(tree, X, y)
+fit!(mach,rows=train)
+evaluate!(mach,
+          measure=[Accuracy()])
+
 

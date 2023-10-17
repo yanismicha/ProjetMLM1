@@ -77,4 +77,12 @@ end
 g(x)= x isa AbstractString && x=="NA"
 filter(r -> all(!g,r),dtClean) #je filtre par ligne r , et je garde tout celles qui ne sastifassent pas la condition
 dtClean=filter(r -> all(!g,r),dtClean) 
-CSV.write("DataSets/membersClean.csv",dtClean)
+
+map_to_String(s) = length(s) == 2 ? "Autres" :  (occursin("Leader",s) || occursin("leader",s)) ? "Leader" : SubString(s,1:3) == "Cli" ? "Climber" : SubString(s,1:2) == "BC" ? "BaseCampStaff" : (occursin("Tv",s) || occursin("Film",s)) ? "Movie/TV_team" : "Autres"
+
+dtFinal=transform(dtClean, :expedition_role => ByRow(map_to_String) => :expedition_role)
+
+#reste à choisir pour "citizenship" si on garde les doubles nationalités ou non
+
+
+CSV.write("DataSets/membersClean.csv",dtFinal)
