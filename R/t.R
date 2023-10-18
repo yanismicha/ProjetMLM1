@@ -8,7 +8,7 @@ data_quali <- data[,c(-4,-7)]
 
 # Define UI for app that draws a histogram ----
 
-ui <- fluidPage(theme = shinytheme("cerulean"),
+ui <- fluidPage(theme = shinytheme("flatly"),
     navbarPage(
       # theme = "cerulean",  # <--- To use a theme, uncomment this
       "M&N",
@@ -36,12 +36,15 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
         #navbar2
       tabPanel("Graphique quanti vs quanti",
         sidebarPanel("Informations requises",
-              selectInput("var2", " Choisissez une variable", choices = names(data_quanti)),
-              selectInput('plot_type','Choisis le type de graphique:', choices = c('Histogram','Scatter Plot')),
-              sliderInput(inputId = "Classes",label = "Nombre de classes:", min = 0, max = 50 , value = 16,step = 2),
+              selectInput("var2", " Choisissez une variable:", choices = names(data_quanti)),
+              selectInput('plot_type','Choisissez le type de graphique:', choices = c('Histogram','Scatter Plot')),
+              conditionalPanel(
+                condition = "input.plot_type == 'Histogram'",
+                sliderInput(inputId = "Classes",label = "Nombre de classes:", min = 0, max = 50 , value = 16,step = 2)
+              ),
               conditionalPanel(
                 condition = "input.plot_type == 'Scatter Plot'",
-                selectInput("var3", "Choisissez la 2ème variable",choices=names(data_quanti))
+                selectInput("var3", "Choisissez la seconde variable",choices=names(data_quanti))
               )
         ),
 
@@ -64,7 +67,8 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
               selectInput('plot_type_quali','Choisis le type de graphique:', choices = c('barplot','mosaicplot')),
               conditionalPanel(
                 condition = "input.plot_type_quali == 'mosaicplot'",
-                selectInput("var5", "Choisissez la 2ème variable",choices=names(data_quali))
+                selectInput("var5", "Choisissez la 2ème variable",choices=names(data_quali)),
+                actionButton("run","run")
               )
         ),
 
@@ -78,6 +82,28 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                 plotOutput('mosaic')
               )
 
+        )
+      ),#fin du tabpanel
+
+      #navbar4
+      tabPanel("Graphique quanti vs quali",
+        sidebarPanel("Informations requises",
+              selectInput("var6", " Choisissez une variable quantitative:", choices = names(data_quanti)),
+
+              selectInput("var7","Choisissez une variable qualitative:", choices = names(data_quali)),
+              selectInput('plot_type_quali_quanti','Choisissez le type de graphique:', choices = c('barplot','boxplot','pieplot','scatterplot')),
+              conditionalPanel(
+                condition = "input.plot_type_quali_quanti == 'scatterplot'",
+                selectInput("var8", "Choisissez une deuxième variable quantitative:",choices=names(data_quanti))
+              ),
+              actionButton("run2","run")
+        ),
+
+        mainPanel(
+              conditionalPanel(
+                condition = "input.plot_type_quali_quanti == 'boxplot'",
+                plotOutput('box_quali_quanti')
+              )
         )
       )#fin du tabpanel
       
@@ -98,6 +124,8 @@ server <- function(input, output) {
         df()
     })
 
+    #################################PARTIE QUANTITATIF###########################
+
     # histogramme
     output$hist <- renderPlot({
        x <- data[, input$var2]
@@ -111,14 +139,17 @@ server <- function(input, output) {
     })
 
 
+ #################################PARTIE QUALITATIF#############################
+
     #barplot
     output$bar <- renderPlot({
        barplot(table(data[,input$var4]), col = 1:10)
     })
 
     #mosaicplot
-    output$mocaic <- renderPlot({
-      mosaicplot(table(data[,input$var4],data[,input$var5]), col = 1:10)
+    output$mosaic <- renderPlot({
+      if(input$run>0)
+      isolate(mosaicplot(table(data[,input$var4],data[,input$var5]), col = 1:10, main = paste("MosaicPlot de la variable ",input$var4," et de la variable ",input$var5)))
     })
 
 
@@ -126,14 +157,24 @@ server <- function(input, output) {
     #resumé stat
     output$summary <- renderPrint({
         summary(data[,input$var1])
-     })
-   # output$sum <- renderPrint({
-    #    summary(data_quali)
-    #})
-
-
-
+    })
+  
+ #################################PARTIE QUANTITATIF vs QUALITATIF##########################
    
+    output$box_quali_quanti <- renderPlot({
+      boxprint <- function(){
+         means <- tapply(data_quanti[, input$var6], data_quali[, input$var7], mean)
+          boxplot(data_quanti[,input$var6]~data_quali[,input$var7],col=2:10,main = paste("boxplot de la variable ",input$var6," en fonction de ",input$var7), ylab = input$var6)
+          points(x = 1:length(means), y = means, pch = 19, col = "black") #ajout de la moyenne
+      }
+      if(input$run2>0){
+        isolate(
+          boxprint()
+        )
+      }
+    })
+ 
+
 
     #sauvegarde de df au format csv
     output$save_data <- downloadHandler(
