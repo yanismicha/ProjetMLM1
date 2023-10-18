@@ -1,81 +1,95 @@
+####################################
+# Data Professor                   #
+# http://youtube.com/dataprofessor #
+# http://github.com/dataprofessor  #
+####################################
+
+# Modified from Winston Chang, 
+# https://shiny.rstudio.com/gallery/shiny-theme-selector.html
+
+# Concepts about Reactive programming used by Shiny, 
+# https://shiny.rstudio.com/articles/reactivity-overview.html
+
+# Load R packages
 library(shiny)
-library(DT)
 library(shinythemes)
-iris$Species <- NULL
-# Define UI for app that draws a histogram ----
-ui <- fluidPage(
-  theme = shinytheme('united'),
-  h1("Application test"),
-  tags$a("tkt frerot c'est la vida loca", href = "https://www.google.fr"),
-  sidebarLayout(
-    sidebarPanel(
-        selectInput('plot_type','Choisis le type de graphique :', choices = c('Histogram','Scatter Plot')),
-         selectInput('var','Choisis une variable :', choices = names(iris)),
-         conditionalPanel(
-            condition = "input.plot_type == 'Scatter Plot'",
-            selectInput('var2','Choisis une deuixème variable :', choices = names(iris))
-         )
 
-    ),
-    mainPanel(
-        tabsetPanel(
-               tabPanel('Data',DTOutput('iris_data'), downloadButton('save_data','save to csv')),
-               tabPanel('Statistiques',
-               verbatimTextOutput('summary'), verbatimTextOutput('summa')),
-               tabPanel('Histogramme',
-               conditionalPanel(
-                condition = "input.plot_type == 'Histogram'",
-                 plotOutput('hist')),
-                
-                conditionalPanel(
-                condition = "input.plot_type == 'Scatter Plot'",
-                 plotOutput('nuage'))
-               )
 
-        )
-    )
+  # Define UI
+  ui <- fluidPage(theme = shinytheme("cerulean"),
+    navbarPage(
+      # theme = "cerulean",  # <--- To use a theme, uncomment this
+      "M&N",
+      tabPanel("IMC",
+               sidebarPanel(
+                 tags$h3("Informations requises:"),
+                 textInput("txt1", "Nom:", ""),
+                 textInput("txt2", "Prénom:", ""),
+                 conditionalPanel(
+                  condition = "input.txt1 != '' && input.txt2 != ''",
+                  numericInput("var","Quel est ton âge?",value=20,min=1,max=100),
+                  numericInput("var2","Quel est ta taille? (en cm)",value=150,min=0,max=200),
+                  numericInput("var3", "Quel est votre poids actuel? (en kg)",value=60,min=0,max=150),
+                  actionButton("run","run")
+                 )
+                 
+                 
 
-  )
-)
+               ), # sidebarPanel
+               mainPanel(
+                            h1("Votre Poids idéal"),
+                            
+                            h4("IMC Formula"),
+                            verbatimTextOutput("poids"),
+                            conditionalPanel(
+                              condition = "input.var3/(input.var2*input.var2/10000) > 30",
+                              verbatimTextOutput("injuregratuite")
+                            )
 
-# Define server logic required to draw a histogram ----
-server <- function(input, output) {
+               ) # mainPanel
+               
+      ), # Navbar 1, tabPanel
+      tabPanel("Navbar 2", "This panel is intentionally left blank"),
+      tabPanel("Navbar 3", "This panel is intentionally left blank")
+  
+    ) # navbarPage
+  ) # fluidPage
 
-    df <- reactive({
-        iris
+  
+  # Define server function  
+  server <- function(input, output) {
+    
+      poids_ideal <- reactive({ 
+        round((input$var2-100+input$var/10)*0.9,1)
     })
 
-
-    #histogramme
-    output$hist <- renderPlot({
-        hist(iris[,input$var],main="histogramme",col="deeppink", xlab = input$var)
+      diff <- reactive({
+        input$var3-poids_ideal()
+      })
+    
+    imc <- reactive({
+      round(input$var3/(input$var2*input$var2/10000),0)
+    })
+    
+    
+    output$poids <- renderText({
+      input$run
+      isolate({
+        paste("Ton poids idéal est: ",poids_ideal(),"kg")
+      })
     })
 
-    output$iris_data <- renderDT({
-        df()
+    output$injuregratuite <- renderText({
+      if (input$run>0) { #permet de ne s'afficher que lorsque le bouton est cliqué
+      isolate(paste("Tu es à ",diff(),"kg de votre poids idéal, sors toi les doigts du uc","\n",
+        "IMC=",imc()))
+      }
     })
+  } # server
+  
 
-    # nuage de points
-    output$nuage <- renderPlot({
-        plot(iris[,input$var],iris[,input$var2], xlab = input$var, ylab = input$var2)
-    })
+  # Create Shiny object
+  shinyApp(ui = ui, server = server)
 
-    #resumé stat
-    output$summary <- renderPrint({
-        summary(iris)
-    })
 
-    #sauvegarde de df au format csv
-    output$save_data <- downloadHandler(
-        filename <- function(){
-            paste("data",Sys.Date(), ".csv", sep = ',')
-        },
-        content <- function(file){
-            write.csv(df(),file)
-        }
-    )
-}
-
-# Create Shiny app ----
-shinyApp(ui = ui, server = server)
 
