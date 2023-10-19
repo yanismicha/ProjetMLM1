@@ -58,7 +58,7 @@ dt.age=parse.(Int64, dt.age)
 
 map_to_String(s) = length(s) == 2 ? "Autres" : SubString(s,1:3) == "Ama" ? "Ama Dablam" : SubString(s,1:3) == "Sha" ? "Sharphu" : SubString(s,1:3) == "Ann" ? "Annapurna" : SubString(s,1:3) == "Dha" ? "Dhaulagiri" : SubString(s,1:3) == "Mak" ? "Makalu" : SubString(s,1:3) == "Gan" ? "Ganesh" : SubString(s,1:3) == "Eve" ? "Everest" : SubString(s,1:3) == "Kan" ? "Kangchen" : SubString(s,1:3) == "Pum" ? "Pumori" : SubString(s,1:3) == "Bar" ? "Baruntse" : SubString(s,1:3) == "Lho" ? "Lhotse" : SubString(s,1:3) == "Man" ? "Manaslu" : SubString(s,1:3) == "Cho" ? "Cho" : "Autres"
 transform!(dt, :peak_name => ByRow(map_to_String) => :peak_name)
-dtClean=dt[!,[1,2,4,5,6,7,8,9,10,11,13,14,15,16,19]]
+dtClean=dt[!,[4,5,6,7,8,9,10,11,13,14,15,16,19]]
 
 
 
@@ -85,4 +85,43 @@ dtFinal=transform(dtClean, :expedition_role => ByRow(map_to_String) => :expediti
 #reste à choisir pour "citizenship" si on garde les doubles nationalités ou non
 
 
+tab=combine(groupby(dtFinal, :citizenship), nrow=> :Freq)
+CSV.write("DataSets/membersClean.csv",dtFinal)
+tab=sort(tab[!,[2,1]])
+tab[tab[!,1].>1000,1]
+
+#nettoyyage de la variable citizenshipp###
+#on split pour enlever les doubles nationalités
+vec=split.(dtFinal.citizenship,'/')
+for i in 1:length(vec)
+    if length(vec[i])>1
+        vec[i]=[vec[i][1]]
+        end
+end
+vecF=[]
+#on met dans un vecteur toute les nationalités
+for i in 1:length(vec)
+    push!(vecF,vec[i][1])
+end
+
+using CategoricalArrays,FreqTables
+
+#on regroupe tout les allemands ensemble (on est plus en 50)
+
+vecF[occursin.("Germany",vecF)] .= "Germany"
+
+dtFinal.citizenship = vecF
+nom=names(tab[tab.<=300])
+nom=nom[1]
+#on regroupe toute les nationalités présentes moins de 300 fois dans une variable autre
+for i in 1: length(nom)
+    vecF[occursin.(nom[i],vecF)].= "Autres"
+end
+
+tab=sort(freqtable(vecF))
+
+#on met notre vecteur dans notre variable citizenship
+dtFinal.citizenship = vecF
+
+#on recupère notre jeu de donnée nettoyé
 CSV.write("DataSets/membersClean.csv",dtFinal)

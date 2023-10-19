@@ -1,5 +1,5 @@
 library(shiny)
-library(DT)
+
 library(shinythemes)
 library(RColorBrewer)
 palette_couleurs <- brewer.pal(12, "Set3")
@@ -17,7 +17,7 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                #sidebarPanel(),
                mainPanel(
                             h1("Votre data"),
-                            DTOutput('dtFinal_data'), 
+                            DT::DTOutput('dtFinal_data'), 
                             downloadButton('save_data','save to csv')
                ) # mainPanel
                
@@ -138,7 +138,7 @@ server <- function(input, output) {
         data
     })
 
-    output$dtFinal_data <- renderDT({
+    output$dtFinal_data <- DT::renderDT({
         df()
     })
 
@@ -161,7 +161,7 @@ server <- function(input, output) {
 
     #barplot
     output$bar <- renderPlot({
-       barplot(table(data[,input$var4]), col = palette_couleurs)
+       barplot(table(data[,input$var4]), col = palette_couleurs,las=2)
     })
 
     #mosaicplot
