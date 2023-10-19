@@ -1,7 +1,8 @@
 library(shiny)
 library(DT)
 library(shinythemes)
-iris$Species <- NULL
+library(RColorBrewer)
+palette_couleurs <- brewer.pal(12, "Set3")
 data <- read.csv("DataSets/membersClean.csv")
 data_quanti <- data[,c("age","year")]
 data_quali <- data[,c(-4,-7)]
@@ -91,7 +92,11 @@ ui <- fluidPage(theme = shinytheme("flatly"),
               selectInput("var6", " Choisissez une variable quantitative:", choices = names(data_quanti)),
 
               selectInput("var7","Choisissez une variable qualitative:", choices = names(data_quali)),
-              selectInput('plot_type_quali_quanti','Choisissez le type de graphique:', choices = c('barplot','boxplot','pieplot','scatterplot')),
+              selectInput('plot_type_quali_quanti','Choisissez le type de graphique:', choices = c('barplot','boxplot','scatterplot')),
+              conditionalPanel(
+                condition = "input.plot_type_quali_quanti == 'barplot'",
+                selectInput("bool","Voulez vous que les barres soient empilées?", choices=c('oui','non'))
+              ),
               conditionalPanel(
                 condition = "input.plot_type_quali_quanti == 'scatterplot'",
                 selectInput("var8", "Choisissez une deuxième variable quantitative:",choices=names(data_quanti))
@@ -103,7 +108,20 @@ ui <- fluidPage(theme = shinytheme("flatly"),
               conditionalPanel(
                 condition = "input.plot_type_quali_quanti == 'boxplot'",
                 plotOutput('box_quali_quanti')
+              ),
+              conditionalPanel(
+                condition = "input.plot_type_quali_quanti == 'barplot' && input.bool == 'oui'",
+                plotOutput('bar_quali_quanti')
+              ),
+              conditionalPanel(
+                condition = "input.plot_type_quali_quanti == 'barplot' && input.bool == 'non'",
+                plotOutput('bar_quali_quanti2')
+              ),
+               conditionalPanel(
+                condition = "input.plot_type_quali_quanti == 'scatterplot'",
+                plotOutput('nuage_quali_quanti')
               )
+
         )
       )#fin du tabpanel
       
@@ -143,13 +161,13 @@ server <- function(input, output) {
 
     #barplot
     output$bar <- renderPlot({
-       barplot(table(data[,input$var4]), col = 1:10)
+       barplot(table(data[,input$var4]), col = palette_couleurs)
     })
 
     #mosaicplot
     output$mosaic <- renderPlot({
       if(input$run>0)
-      isolate(mosaicplot(table(data[,input$var4],data[,input$var5]), col = 1:10, main = paste("MosaicPlot de la variable ",input$var4," et de la variable ",input$var5)))
+      isolate(mosaicplot(table(data[,input$var4],data[,input$var5]), col = palette_couleurs, main = paste("MosaicPlot de la variable ",input$var4," et de la variable ",input$var5)))
     })
 
 
@@ -161,15 +179,40 @@ server <- function(input, output) {
   
  #################################PARTIE QUANTITATIF vs QUALITATIF##########################
    
+   ##boxplot##
     output$box_quali_quanti <- renderPlot({
       boxprint <- function(){
          means <- tapply(data_quanti[, input$var6], data_quali[, input$var7], mean)
-          boxplot(data_quanti[,input$var6]~data_quali[,input$var7],col=2:10,main = paste("boxplot de la variable ",input$var6," en fonction de ",input$var7), ylab = input$var6)
+          boxplot(data_quanti[,input$var6]~data_quali[,input$var7],col = palette_couleurs,main = paste("boxplot de la variable ",input$var6," en fonction de ",input$var7), ylab = input$var6)
           points(x = 1:length(means), y = means, pch = 19, col = "black") #ajout de la moyenne
       }
       if(input$run2>0){
         isolate(
           boxprint()
+        )
+      }
+    })
+
+    ##barplot##
+    
+    #barplot empilé
+    output$bar_quali_quanti <- renderPlot({
+      if(input$run2>0){
+        isolate(
+          barplot(table(data[,input$var7], data[,input$var6]),beside = FALSE, col = palette_couleurs,legend.text = TRUE, main = paste("Distribution de ",input$var6," par ",input$var7," (barplot empilé)"),
+        xlab = input$var6,
+        ylab = "Fréquence")
+        )
+      }
+    })
+
+    #barplot non empilé
+    output$bar_quali_quanti2 <- renderPlot({
+      if(input$run2>0){
+        isolate(
+          barplot(table(data[,input$var7], data[,input$var6]),beside = TRUE, col = palette_couleurs,legend.text = TRUE, main = paste("Distribution de ",input$var6," par ",input$var7," (barplot non empilé)"),
+        xlab = input$var6,
+        ylab = "Fréquence")
         )
       }
     })

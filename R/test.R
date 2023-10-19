@@ -91,5 +91,13 @@ library(shinythemes)
   # Create Shiny object
   shinyApp(ui = ui, server = server)
 
+classes<-c(0,20,30,40,50,60,70,80,90)
+agecut <- cut(age,classes,include.lowest = TRUE)
+hist(agecut, pch = ifelse(sex == "M", 1, 2), col = ifelse(sex == "M", "blue", "red"),
+     xlab = "Âge", ylab = "Sexe", main = "Scatter Plot Âge vs Sexe")
+
+# Ajoutez une légende
+legend("topright", legend = levels(sex), pch = 1:2, col = c("blue", "red"))
+#regarder le tp de rachdi pour faire ça!!!
 
 
