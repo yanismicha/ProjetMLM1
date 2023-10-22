@@ -100,4 +100,26 @@ hist(agecut, pch = ifelse(sex == "M", 1, 2), col = ifelse(sex == "M", "blue", "r
 legend("topright", legend = levels(sex), pch = 1:2, col = c("blue", "red"))
 #regarder le tp de rachdi pour faire ça!!!
 
+##ajout  visualisation quantitative selon une modalité quali: exemple l'age des français.
+couleurs <- ifelse(sex == "M", "blue","red")
+plot(year,age, 
+     xlab = "Saison", ylab = "Ozone",
+     main = "Ozone en fonction des saisons",
+     col = couleurs)
 
+legend("topright", legend = levels(as.factor(saison)), 
+       pch = c(1, 2, 3), col = c("red", "green", "blue"),
+       title = "Saison", cex = 0.8)
+
+
+
+data_filtre <- data[data[,"expedition_role"] == "Leader", ]
+n_observations <- length(data_filtre[,"age"])
+
+# Calcul de la fréquence par rapport à la population totale 
+frequency <- n_observations / length(data[,"age"])
+pop <- round(frequency*100,2)
+# Création du résumé personnalisé
+custom_summary <- summary(data_filtre[,"age"])
+custom_summary <- c(custom_summary, N_Observations = n_observations, Pourcentage_population = pop)
+round(custom_summary,2)
