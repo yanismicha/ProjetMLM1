@@ -55,7 +55,7 @@ ui <- fluidPage(
        
 
                 #tabpanel2
-                tabPanel("Graphique quanti vs quanti",
+                tabPanel("Graphique quantitatifs",
                         sidebarPanel("Informations requises",
                                     selectInput("var2", " Choisissez une variable:", choices = names(data_quanti)),
                                     selectInput('plot_type','Choisissez le type de graphique:', choices = c('Histogram','Scatter Plot')),
@@ -71,48 +71,28 @@ ui <- fluidPage(
                                         condition = "input.bool2 == 'oui'",
                                         selectInput("var_binaire","Variable à discriminer:",choices = names(data_binaire))
                                       )
-                                    )
+                                    ),
+                                    actionButton("run2","run")
                         ),
 
                         mainPanel(
-                                 conditionalPanel(
-                                    condition = "input.plot_type == 'Histogram'",
-                                    plotOutput('hist')
-                                ),
-                                conditionalPanel(
-                                    condition = "input.plot_type == 'Scatter Plot' && input.bool2 == 'non'",
-                                    plotOutput('nuage')
-                                ),
-                                conditionalPanel(
-                                    condition = "input.plot_type == 'Scatter Plot' && input.bool2 == 'oui'",
-                                    plotOutput('nuage_qual')
-                                )
-
-
+                                 plotOutput("plot_quanti")
                         )
                   ),
                   #tabpanel3
-                  tabPanel("Graphique quali vs quali",
+                  tabPanel("Graphique qualitatifs",
                           sidebarPanel("Informations requises",
                                       selectInput("var4", " Choisissez une variable", choices = names(data_quali)),
                                       selectInput('plot_type_quali','Choisis le type de graphique:', choices = c('barplot','mosaicplot')),
                                       conditionalPanel(
                                         condition = "input.plot_type_quali == 'mosaicplot'",
-                                        selectInput("var5", "Choisissez la 2ème variable",choices=names(data_quali)),
-                                        actionButton("run2","run")
-                                      )
-                            ),
+                                        selectInput("var5", "Choisissez la 2ème variable",choices=names(data_quali))
+                                      ),
+                                      actionButton("run3","run")
+                          ),
 
                           mainPanel(
-                                  conditionalPanel(
-                                    condition = "input.plot_type_quali == 'barplot'",
-                                    plotOutput('bar')
-                                  ),
-                                  conditionalPanel(
-                                    condition = "input.plot_type_quali == 'mosaicplot'",
-                                    plotOutput('mosaic')
-                                  )
-
+                                  plotOutput("plot_quali")
                           )
                   ),#fin du tabpanel
 
@@ -131,29 +111,16 @@ ui <- fluidPage(
                                         selectInput("var8", "Choisissez une deuxième variable quantitative:",choices=names(data_quanti)),
                                         selectInput("cat2","Sur quel modalité voulez vous discriminer?",choices = NULL)
                                       ),
-                                      actionButton("run3","run")
+                                      actionButton("run4","run")
                             ),
                           mainPanel(
-                                    conditionalPanel(
-                                      condition = "input.plot_type_quali_quanti == 'boxplot'",
-                                      plotOutput('box_quali_quanti')
-                                    ),
-                                    conditionalPanel(
-                                      condition = "input.plot_type_quali_quanti == 'barplot' && input.bool == 'oui'",
-                                      plotOutput('bar_quali_quanti')
-                                    ),
-                                    conditionalPanel(
-                                      condition = "input.plot_type_quali_quanti == 'barplot' && input.bool == 'non'",
-                                      plotOutput('bar_quali_quanti2')
-                                    ),
-                                    conditionalPanel(
-                                      condition = "input.plot_type_quali_quanti == 'scatterplot'",
-                                      plotOutput('nuage_quali_quanti')
-                                    )
-
+                                    plotOutput("plot_quali_quanti")
                           )
                   )#fin du tabpanel
-      ) # navbarMenu
+      ), # navbarMenu
+      navbarMenu("Predictions",
+                  tabPanel("KNNPredictions")
+      )
     )#NavBarPage
   ) # fluidPage
 
@@ -237,97 +204,79 @@ server <- function(input, output,session) {
 
     #################################PARTIE QUANTITATIF###########################
 
-    # histogramme
-    output$hist <- renderPlot({
-       x <- data[, input$var2]
-       bins <- seq(min(x), max(x), length.out = input$Classes + 1)
-       hist(x,breaks = bins,main="histogramme",col="deeppink", xlab = input$var)
-    })
-
-    #nuage
-    output$nuage <- renderPlot({
-      plot(data_quanti[,input$var2],data_quanti[,input$var3], xlab = input$var2, ylab = input$var3)
-    })
-
-    output$nuage_qual <- renderPlot({
-      nuageprint <- function(){
-        moda <- levels(as.factor(data_binaire[,input$var_binaire]))
-        pchs <-  ifelse(data[,input$var_binaire] == moda[1],1,2)
-        couleurs <- ifelse(data[,input$var_binaire] == moda[1], "blue","deeppink")
-        plot(data_quanti[,input$var2],data_quanti[,input$var3], xlab = input$var2, ylab = input$var3,col = couleurs,pch = pchs)
-        legend("topright", legend = moda, 
-        pch = c(1,2), col = c("blue","deeppink"),
-        , cex = 0.8)
+    plot_quanti_print <- eventReactive(input$run2,{
+      ##Histogram##
+      if(input$plot_type == "Histogram"){
+         x <- data[, input$var2]
+        bins <- seq(min(x), max(x), length.out = input$Classes + 1)
+        hist(x,breaks = bins,main="histogramme",col="deeppink", xlab = input$var)
       }
-      nuageprint()
+      ##scatterplot selon une modalité##
+      else if(input$bool2 == "oui"){
+          moda <- levels(as.factor(data_binaire[,input$var_binaire]))
+          pchs <-  ifelse(data[,input$var_binaire] == moda[1],1,2)
+          couleurs <- ifelse(data[,input$var_binaire] == moda[1], "blue","deeppink")
+          plot(data_quanti[,input$var2],data_quanti[,input$var3], xlab = input$var2, ylab = input$var3,col = couleurs,pch = pchs)
+          legend("topright", legend = moda, pch = c(1,2), col = c("blue","deeppink"), cex = 0.8)
+      }
+      ##scatterplot sur toute la population##
+      else 
+          plot(data_quanti[,input$var2],data_quanti[,input$var3], xlab = input$var2, ylab = input$var3,col = "black", pch = 19)
+      })
+
+
+    output$plot_quanti <- renderPlot({
+       plot_quanti_print()
     })
+
+    
+
 
 
  #################################PARTIE QUALITATIF#############################
-
-    #barplot
-    output$bar <- renderPlot({
-       barplot(table(data[,input$var4]), col = palette_couleurs,las=2)
+    plot_quali_print <- eventReactive(input$run3,{
+      ##barplot##
+      if(input$plot_type_quali == "barplot")
+          barplot(table(data[, input$var4]), col = palette_couleurs, las = 2)
+          ##mosaicplot##
+      else
+        mosaicplot(table(data[, input$var4], data[, input$var5]),col = palette_couleurs, xlab = input$var4,ylab = input$var5,main = paste("Mosaicplot de ",input$var4,"en fonction de ",input$var5),las = 2)
     })
-
-    #mosaicplot
-    output$mosaic <- renderPlot({
-      if(input$run2>0)
-      isolate(mosaicplot(table(data[,input$var4],data[,input$var5]), col = palette_couleurs, main = paste("MosaicPlot de la variable ",input$var4," et de la variable ",input$var5)))
+    output$plot_quali <- renderPlot({
+       plot_quali_print()
     })
-
 
 
   
  #################################PARTIE QUANTITATIF vs QUALITATIF##########################
    
-   ##boxplot##
-    output$box_quali_quanti <- renderPlot({
-      boxprint <- function(){
-         means <- tapply(data_quanti[, input$var6], data_quali[, input$var7], mean)
+
+    plot_quali_quanti_print <- eventReactive(input$run4,{
+        means <- tapply(data_quanti[, input$var6], data_quali[, input$var7], mean)
+           ##boxplot##
+        if(input$plot_type_quali_quanti == "boxplot"){
           boxplot(data_quanti[,input$var6]~data_quali[,input$var7],col = palette_couleurs,main = paste("boxplot de la variable ",input$var6," en fonction de ",input$var7), ylab = input$var6,xlab = "",las = 2)
           points(x = 1:length(means), y = means, pch = 19, col = "black") #ajout de la moyenne # nolint
-      }
-      if(input$run3>0){
-        isolate(
-          boxprint()
-        )
-      }
+        }
+          ##barplot##
+        else if (input$plot_type_quali_quanti == "barplot") {
+            empil <- ifelse(input$bool == "oui",FALSE,TRUE)
+            cont <- table(data[,input$var7], data[,input$var6])
+            barplot(cont,beside = empil, col = palette_couleurs,legend.text = TRUE, main = paste("Distribution de ",input$var6," par ",input$var7),
+                    xlab = input$var6,ylab = "Fréquence")
+        }
+        ##scatterplot##
+        else{
+            data_filtre <- data[data[,input$var7] == input$cat2,]
+            plot(data_filtre[,input$var6],data_filtre[,input$var8],xlab = input$var6, ylab = input$var8,pch=20)
+        }
     })
 
-    ##barplot##
-    
-    #barplot empilé
-    output$bar_quali_quanti <- renderPlot({
-      if(input$run3>0){
-        isolate(
-          barplot(table(data[,input$var7], data[,input$var6]),beside = FALSE, col = palette_couleurs,legend.text = TRUE, main = paste("Distribution de ",input$var6," par ",input$var7," (barplot empilé)"),
-        xlab = input$var6,
-        ylab = "Fréquence")
-        )
-      }
+    output$plot_quali_quanti <- renderPlot({
+      plot_quali_quanti_print()
     })
 
-    #barplot non empilé
-    output$bar_quali_quanti2 <- renderPlot({
-      if(input$run3>0){
-        isolate(
-          barplot(table(data[,input$var7], data[,input$var6]),beside = TRUE, col = palette_couleurs,legend.text = TRUE, main = paste("Distribution de ",input$var6," par ",input$var7," (barplot non empilé)"),
-        xlab = input$var6,
-        ylab = "Fréquence")
-        )
-      }
-    })
-
-    #scatterplot
-    output$nuage_quali_quanti <- renderPlot({
-      data_filtre <- data[data[,input$var7] == input$cat,]
-      if(input$run3>0){
-        isolate(
-          plot(data_filtre[,input$var6],data_filtre[,input$var8],xlab = input$var6, ylab = input$var8,pch=20)
-        )
-      }   
-    })
+   
  
 
 
