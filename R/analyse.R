@@ -150,6 +150,7 @@ server <- function(input, output,session) {
       pageButtonHoverStyle = list(backgroundColor = "hsl(233, 9%, 25%)"),
       pageButtonActiveStyle = list(backgroundColor = "hsl(233, 9%, 28%)"))
 
+
     df <- reactive({
       reactable(data,
         columns = list(success = colDef(align = "center", style = "color: red;", filterable = FALSE)),
