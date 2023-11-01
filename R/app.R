@@ -8,23 +8,26 @@ library(scales)
 library(ggrepel)
 library(patchwork)
 library(ggridges)
-
+library(separ)#permet de scinder ma data en quanti, quali et binaire.
 palette_couleurs <- brewer.pal(12, "Set3")
-data <- read.csv("DataSets/membersClean.csv")
-data_quanti <- data[,c("age","year")]
-data_quali <- data[,c(-2,-5)]
-data_binaire <- data_quali[,c(-1,-2,-4,-5)]
+data <- read.csv("https://www.dropbox.com/scl/fi/d3v41yp6x9cxlqvueoet3/membersClean.csv?rlkey=v9xfdgu6oyubjur9rlu6k9eow&dl=1")
+names_data_quali <- scinde(data,"quali")
+names_data_quanti <- scinde(data,"quanti")
+names_data_binaire <- scinde(data,"binaire")
+data_quanti <- data[,names_data_quanti]
+data_quali <- data[,names_data_quali]
+data_binaire <- data[,names_data_binaire]
 
+#a voir
+#data_quanti_names <- toJSON(names(data_quanti))
 ######fonctions à mettre dans un package#######
-pluspetite<- function(data, variable){#on recupere la plus petite modalité
-                counts <- table(data[,variable])
-                names(counts)[which.min(counts)]
-              }
+
 barsTriees <- function(df, var) {
   df |> 
     mutate({{ var }} := fct_rev(fct_infreq({{ var }})))  |>
     ggplot(aes(x = {{ var }},fill= {{var}})) +
-    geom_bar()
+    geom_bar() +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1))
 }
 ######fonctions à mettre dans un package#######
 
@@ -64,7 +67,7 @@ ui <- dashboardPage(
         sidebarPanel("Informations requises",
           selectInput("var1", " Choisissez une variable", choices = names(data)),
           conditionalPanel(
-            condition = "input.var1 == 'age' || input.var1 == 'year'",
+            condition = '["year","age"].includes(input.var1)',
             radioButtons("bool1", "Souhaitez vous regarder une partie de la population?", choices = c('non', 'oui')),
             conditionalPanel(
               condition = "input.bool1 == 'oui'",
@@ -85,7 +88,7 @@ ui <- dashboardPage(
           selectInput('plot_type', 'Choisissez le type de graphique:', choices = c('Histogram', 'scatterplot','Density','boxplot')),
           conditionalPanel(
             condition = "input.plot_type == 'Histogram'",
-            sliderInput(inputId = "Classes", label = "Nombre de classes:", min = 1, max = 50, value = 8, step = 2)
+            sliderInput(inputId = "Classes", label = "Nombre de classes:", min = 2, max = 50, value = 8, step = 2)
           ),
           conditionalPanel(
             condition = "input.plot_type == 'boxplot'",
@@ -284,7 +287,7 @@ server <- function(input, output,session) {
             }
           }
           else{##ggplot##
-            ggplot(dt, aes(y = x1)) + 
+            ggplot(data, aes(y = x1)) + 
             geom_boxplot(aes(group = cut_interval(x1, input$Classes2)),varwidth = width) +
             labs(
               y = input$var2,
@@ -313,7 +316,7 @@ server <- function(input, output,session) {
                       title = paste(input$var2," en fonction de ",input$var3),
                       caption = "Data from Himalayan Expeditions"
                     )
-              #moda <- pluspetite(data,input$var_binaire)    ##a revoir##
+              #moda <- minmod(data,input$var_binaire)    ##a revoir##
               #p2 <- ggplot(data, aes(x = x1, y = x2)) + 
                #     geom_point() + 
                 #    geom_point(
@@ -370,7 +373,8 @@ server <- function(input, output,session) {
         else{  
           if(input$bool3 == "non"){
             ggplot(data, aes(x = y, fill = y)) + 
-            geom_bar()
+            geom_bar() +
+            theme(axis.text.x = element_text(angle = 90, hjust = 1))
           }
           else {
             data |> barsTriees(y)
@@ -418,10 +422,10 @@ server <- function(input, output,session) {
             if(input$type_graph=="classique"){
               cont <- table(y,x)
               barplot(cont,beside = FALSE, col = palette_couleurs,legend.text = TRUE, main = paste("Distribution de ",input$var6," par ",input$var7),
-                      xlab = input$var6,ylab = "Fréquence")
+                      xlab = " ",ylab = "Fréquence",las = 2)
             }
             else{##ggplot
-              ggplot(dt, aes(x = x, fill = y)) + 
+              ggplot(data, aes(x = x, fill = y)) + 
               geom_bar() +
               labs(
                  x = input$var6,
