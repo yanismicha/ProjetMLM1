@@ -9,6 +9,7 @@ library(ggrepel)
 library(patchwork)
 library(ggridges)
 library(separ)#permet de scinder ma data en quanti, quali et binaire.
+library(compar)
 palette_couleurs <- brewer.pal(12, "Set3")
 data <- read.csv("https://www.dropbox.com/scl/fi/d3v41yp6x9cxlqvueoet3/membersClean.csv?rlkey=v9xfdgu6oyubjur9rlu6k9eow&dl=1")
 names_data_quali <- scinde(data,"quali")
@@ -22,14 +23,7 @@ data_binaire <- data[,names_data_binaire]
 #data_quanti_names <- toJSON(names(data_quanti))
 ######fonctions à mettre dans un package#######
 
-barsTriees <- function(df, var) {
-  df |> 
-    mutate({{ var }} := fct_rev(fct_infreq({{ var }})))  |>
-    ggplot(aes(x = {{ var }},fill= {{var}})) +
-    geom_bar() +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1))
-}
-######fonctions à mettre dans un package#######
+
 
 ui <- dashboardPage(
   dashboardHeader(title = "M&N"),
@@ -40,14 +34,15 @@ ui <- dashboardPage(
         menuSubItem("Résumés statistiques", tabName = "resume"),
         menuSubItem("Graphique quantitatifs", tabName = "graph_quantitatifs"),
         menuSubItem("Graphique qualitatifs", tabName = "graph_qualitatifs"),
-        menuSubItem("Graphique quanti vs quali", tabName = "graph_quanti_quali")
+        menuSubItem("Graphique quanti vs quali", tabName = "graph_quanti_quali"),
+        radioButtons("type_graph","Choix du style de graphiques:",choices = c("classique","ggplot"))
+
       ),
       menuItem("Predictions", tabName = "predictions",startExpanded = TRUE, menuName = "Predictions",
         menuSubItem("KNN",tabName = "knn"),
         menuSubItem("Tree",tabName = "Arbre de décision")
       )
-    ),
-    radioButtons("type_graph","Choix du style de graphiques:",choices = c("classique","ggplot2"))
+    )
   ),
   dashboardBody( tags$style(HTML("
       .content-wrapper {
@@ -105,8 +100,8 @@ ui <- dashboardPage(
             )
           ),
           conditionalPanel(
-            condition = "input.plot_type == 'Density' && input.type_graph == 'ggplot2'",
-            selectInput("var_quali2","Variable à discriminer:",choices = names(data_quali))
+            condition = "input.plot_type == 'Density'",
+            selectInput("var_quali2","Variable à discriminer:",choices = c("Aucune",names(data_quali)))
           ),
           actionButton("run2", "run")
         ),
@@ -235,87 +230,28 @@ server <- function(input, output,session) {
 
     plot_quanti_print <- eventReactive(input$run2,{
       #######Histogram######
-       x1 <- data_quanti[, input$var2]
-       x2 <- data_quanti[, input$var3]
       if(input$plot_type == "Histogram"){
-          cl <- input$Classes
-          bins <- seq(min(x1), max(x1), length.out = cl + 1)
-          if(input$type_graph == "classique"){
-            hist(x1,breaks = bins,main="histogramme",col="deeppink", xlab = input$var2)
-          }
-          else{##ggplot version
-            labels <- paste0("(", round(bins[-length(bins)], 0), ",", round(bins[-1], 0), "]")
-            ggplot(data, aes(x = cut(x1, breaks = cl,labels=labels))) +
-            geom_bar(color = "deeppink") +
-            labs( #la legende
-              x = input$var2,
-              caption = "Data from Himalayan Expeditions"
-            ) +
-            theme(axis.text.x = element_text(angle = 90, hjust = 1))
-          }
+         histogramme(data,input$var2,input$Classes,"deeppink",input$type_graph)
       }
       #######Densite######
       else if (input$plot_type == "Density"){
-          if(input$type_graph == "classique"){
-            plot(density(x1),main = paste("densité de la variable",input$var2))
-          }
-          else{#ggplot
-            modalites <- data_quali[,input$var_quali2]
-            ggplot(data, aes(x = x1, y = modalites, fill = modalites, color = modalites)) +
-            geom_density_ridges(alpha = 0.5, show.legend = TRUE) +
-            labs(
-              x = input$var2,
-              y = NULL,
-              color = input$var_quali2,
-              fill = input$var_quali2,
-              caption = "Data from Himalayan Expeditions"
-            )
-          }          
-      }
+          modalite <- NULL
+          if(input$var_quali2!="Aucune")
+            modalite <- input$var_quali2
+          densite(data = data,variable = input$var2,modalite=modalite ,type = input$type_graph)
+      }          
       ######boxplot######
       else if (input$plot_type == "boxplot"){
           width <- ifelse(input$bool4 == 'oui',TRUE,FALSE)
-          if(input$type_graph == "classique"){
-            if(input$Classes2>1){
-              bins <- seq(min(x1), max(x1), length.out = input$Classes2 + 1)
-              labels <- paste0("(", round(bins[-length(bins)], 0), ",", round(bins[-1], 0), "]")
-              varcut <- cut(x1, breaks = input$Classes2,labels = labels)
-              boxplot(x1 ~ varcut, varwidth = width, xlab = input$var2, main="",las=2)
-            }
-            else {
-              boxplot(x1,xlab = input$var2,main = "")
-            }
-          }
-          else{##ggplot##
-            ggplot(data, aes(y = x1)) + 
-            geom_boxplot(aes(group = cut_interval(x1, input$Classes2)),varwidth = width) +
-            labs(
-              y = input$var2,
-              caption = "Data from Himalayan Expeditions"
-            )
-          }
+          boitemoustache(data = data,variable = input$var2,nbClasses = input$Classes2,varwidth = width,type = input$type_graph,color = palette_couleurs[1:input$Classes2])#gestion des couleurs
       }
-        ##scatterplot selon une modalité##
-      else if(input$bool2 == "oui"){
-            y <- data_binaire[,input$var_binaire]
-            if(input$type_graph == "classique"){
-              moda <- levels(as.factor(y))
-              pchs <-  ifelse(y == moda[1],1,2)
-              couleurs <- ifelse(y == moda[1], "blue","deeppink")
-              plot(x1,x2, xlab = input$var2, ylab = input$var3,col = couleurs,pch = pchs)
-              legend("topright", legend = moda, pch = c(1,2), col = c("blue","deeppink"), cex = 0.8)
-            }
-            else{ ##ggplot version
-              p1 <- ggplot(data, aes(x = x1, y = x2)) +
-                    geom_point(aes(color = y)) +
-                    geom_smooth(se = FALSE) + # courbe de regression lisse
-                    labs( #la legende
-                      x = input$var2,
-                      y = input$var3,
-                      color = input$var_binaire,
-                      title = paste(input$var2," en fonction de ",input$var3),
-                      caption = "Data from Himalayan Expeditions"
-                    )
+        ##scatterplot ##
+      else {
+            modalite <- NULL
+            if(input$bool2 == "oui")
+              modalite <- input$var_binaire
+            scatterplot(data,input$var2,input$var3,input$type_graph,modalite = modalite)
+            
               #moda <- minmod(data,input$var_binaire)    ##a revoir##
               #p2 <- ggplot(data, aes(x = x1, y = x2)) + 
                #     geom_point() + 
@@ -327,25 +263,9 @@ server <- function(input, output,session) {
                      # data = data |> filter(sex == "F"), 
                       #shape = "circle open", size = 3, color = "red"
                     #) 
-              p1
-            }
-        }
-        ##scatterplot sur toute la population##
-        else {
-            if(input$type_graph == "classique")
-              plot(x1,x2,xlab = input$var2, ylab = input$var3,col = "black", pch = 19)
-            else {#ggplotversion
-               ggplot(data, aes(x = x1, y = x2)) +
-               geom_bin2d() +
-               labs(
-                x = input$var2,
-                y = input$var3,
-                 caption = "Data from Himalayan Expeditions"
-               )
-            }
-        }
+      }
       
-        })
+    })
 
 
     output$plot_quanti <- renderPlot({
@@ -362,24 +282,7 @@ server <- function(input, output,session) {
       y <- data[, input$var4]
       ##barplot##
       if(input$plot_type_quali == "barplot"){
-        if(input$type_graph == "classique"){
-          if(input$bool3 == "non"){
-            barplot(table(y), col = palette_couleurs, las = 2)
-          }
-          else {
-             barplot(sort(table(y)), col = palette_couleurs, las = 2)
-          }
-        }  
-        else{  
-          if(input$bool3 == "non"){
-            ggplot(data, aes(x = y, fill = y)) + 
-            geom_bar() +
-            theme(axis.text.x = element_text(angle = 90, hjust = 1))
-          }
-          else {
-            data |> barsTriees(y)
-          }    
-        }
+        diagbatons(data, input$var4,ifelse(input$bool3=="non",FALSE,TRUE),color = palette_couleurs,type = input$type_graph)
       }
           ##mosaicplot##
       else
@@ -400,41 +303,11 @@ server <- function(input, output,session) {
         
            ##boxplot##
         if(input$plot_type_quali_quanti == "boxplot"){
-          if(input$type_graph== "classique"){
-            means <- tapply(x,y,mean)
-            boxplot(x~y,col = palette_couleurs,main = paste("boxplot de la variable ",input$var6," en fonction de ",input$var7), ylab = input$var6,xlab = "",las = 2)
-            points(x = 1:length(means), y = means, pch = 19, col = "black") #ajout de la moyenne # nolint
-          }
-          else{
-            ggplot(data, aes(x = fct_reorder(y,x, median),y=x, color = y)) +
-            geom_boxplot() +
-            labs( #la legende
-                      x = input$var7,
-                      y = input$var6,
-                      color = input$var7,
-                      caption = "Data from Himalayan Expeditions"
-            ) +
-            theme(axis.text.x = element_text(angle = 90, hjust = 1))
-          }
+          boitemoustache(data,input$var6,type = input$type_graph,color = palette_couleurs,modalite = input$var7)
         }
           ##barplot##
         else if (input$plot_type_quali_quanti == "barplot") {
-            if(input$type_graph=="classique"){
-              cont <- table(y,x)
-              barplot(cont,beside = FALSE, col = palette_couleurs,legend.text = TRUE, main = paste("Distribution de ",input$var6," par ",input$var7),
-                      xlab = " ",ylab = "Fréquence",las = 2)
-            }
-            else{##ggplot
-              ggplot(data, aes(x = x, fill = y)) + 
-              geom_bar() +
-              labs(
-                 x = input$var6,
-                 y = input$var7,
-                 fill = input$var7,
-                 caption = "Data from Himalayan Expeditions"
-              ) +
-              theme(axis.text.x = element_text(angle = 90, hjust = 1))
-            }
+            diagbatons(data,input$var7,color = palette_couleurs,type = input$type_graph,variable = input$var6)
         }
         ##scatterplot##
         else{
