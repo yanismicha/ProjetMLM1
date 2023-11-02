@@ -1,14 +1,22 @@
 library(shiny)
-
 library(shinythemes)
 library(RColorBrewer)
 library(reactable)
+library(tidyverse)
+library(scales)
+library(ggrepel)
+library(patchwork)
+library(ggridges)
+library(separ)#permet de scinder ma data en quanti, quali et binaire.
+library(compar)
 palette_couleurs <- brewer.pal(12, "Set3")
-data <- read.csv("DataSets/membersClean.csv")
-data_quanti <- data[,c("age","year")]
-data_quali <- data[,c(-2,-5)]
-data_binaire <- data_quali[,c(-1,-2,-4,-5)]
-# Define UI for app that draws a histogram ----
+data <- read.csv("https://www.dropbox.com/scl/fi/d3v41yp6x9cxlqvueoet3/membersClean.csv?rlkey=v9xfdgu6oyubjur9rlu6k9eow&dl=1")
+names_data_quali <- scinde(data,"quali")
+names_data_quanti <- scinde(data,"quanti")
+names_data_binaire <- scinde(data,"binaire")
+data_quanti <- data[,names_data_quanti]
+data_quali <- data[,names_data_quali]
+data_binaire <- data[,names_data_binaire]
 
 ui <- fluidPage(
     navbarPage(theme = shinytheme("flatly"),
@@ -38,85 +46,88 @@ ui <- fluidPage(
                                     actionButton("run","run")
                         ),
                         mainPanel(h1("Résumé statistiques"),
-                                  conditionalPanel(
-                                    condition = "input.bool1 == 'non'",
-                                    verbatimTextOutput("summary")
-                                  ),
-                                  conditionalPanel(
-                                    condition = "input.bool1 == 'oui' && (input.var1 == 'age' || input.var1 == 'year')",
-                                    verbatimTextOutput("sub_summary")
-                                  ),
-                                  conditionalPanel(
-                                      condition = "input.var1 != 'age' && input.var1 != 'year'",
-                                      verbatimTextOutput("summary_quali")
-                                  )
+                                  verbatimTextOutput("summary")
                         )
+                        
                 ),
        
 
                 #tabpanel2
                 tabPanel("Graphique quantitatifs",
                         sidebarPanel("Informations requises",
-                                    selectInput("var2", " Choisissez une variable:", choices = names(data_quanti)),
-                                    selectInput('plot_type','Choisissez le type de graphique:', choices = c('Histogram','Scatter Plot')),
-                                    conditionalPanel(
-                                      condition = "input.plot_type == 'Histogram'",
-                                      sliderInput(inputId = "Classes",label = "Nombre de classes:", min = 0, max = 50 , value = 16,step = 2)
-                                      ),
-                                    conditionalPanel(
-                                      condition = "input.plot_type == 'Scatter Plot'",
-                                      selectInput("var3", "Choisissez la seconde variable",choices=names(data_quanti)),
-                                      radioButtons("bool2","Souhaitez vous regarder une partie de la population?",choices=c('non','oui')),
-                                      conditionalPanel(
-                                        condition = "input.bool2 == 'oui'",
-                                        selectInput("var_binaire","Variable à discriminer:",choices = names(data_binaire))
-                                      )
-                                    ),
-                                    actionButton("run2","run")
-                        ),
+          radioButtons("type_graph","Choix du style de graphiques:",choices = c("classique","ggplot")),
 
-                        mainPanel(
-                                 plotOutput("plot_quanti")
-                        )
+          selectInput("var2", " Choisissez une variable:", choices = names(data_quanti)),
+          selectInput('plot_type', 'Choisissez le type de graphique:', choices = c('Histogram', 'scatterplot','Density','boxplot')),
+          conditionalPanel(
+            condition = "input.plot_type == 'Histogram'",
+            sliderInput(inputId = "Classes", label = "Nombre de classes:", min = 2, max = 50, value = 8, step = 2)
+          ),
+          conditionalPanel(
+            condition = "input.plot_type == 'boxplot'",
+            sliderInput(inputId = "Classes2", label = "Nombre de classes:", min = 1, max = 10, value = 2, step = 1),
+            radioButtons("bool4","Voulez vous que la taille des box dépende de l'effectif?",choices = c("oui","non"))
+          ),
+          conditionalPanel(
+            condition = "input.plot_type == 'scatterplot'",
+            selectInput("var3", "Choisissez la seconde variable", choices = names(data_quanti)),
+            radioButtons("bool2", "Souhaitez vous regarder une partie de la population?", choices = c('non', 'oui')),
+            conditionalPanel(
+              condition = "input.bool2 == 'oui'",
+              selectInput("var_binaire", "Variable à discriminer:", choices = names(data_binaire))
+            )
+          ),
+          conditionalPanel(
+            condition = "input.plot_type == 'Density'",
+            selectInput("var_quali2","Variable à discriminer:",choices = c("Aucune",names(data_quali)))
+          ),
+          actionButton("run2", "run")
+        ),
+        mainPanel(
+          plotOutput("plot_quanti")
+        )
                   ),
                   #tabpanel3
                   tabPanel("Graphique qualitatifs",
                           sidebarPanel("Informations requises",
-                                      selectInput("var4", " Choisissez une variable", choices = names(data_quali)),
-                                      selectInput('plot_type_quali','Choisis le type de graphique:', choices = c('barplot','mosaicplot')),
-                                      conditionalPanel(
-                                        condition = "input.plot_type_quali == 'mosaicplot'",
-                                        selectInput("var5", "Choisissez la 2ème variable",choices=names(data_quali))
-                                      ),
-                                      actionButton("run3","run")
-                          ),
-
-                          mainPanel(
-                                  plotOutput("plot_quali")
-                          )
+                         radioButtons("type_graph","Choix du style de graphiques:",choices = c("classique","ggplot")),
+          selectInput("var4", " Choisissez une variable", choices = names(data_quali)),
+          selectInput('plot_type_quali', 'Choisissez le type de graphique:', choices = c('barplot', 'mosaicplot')),
+          conditionalPanel(
+            condition = "input.plot_type_quali == 'mosaicplot'",
+            selectInput("var5", "Choisissez la 2ème variable", choices = names(data_quali))
+          ),
+          conditionalPanel(
+            condition = "input.plot_type_quali == 'barplot'",
+            radioButtons("bool3","Voulez vous que les barres soient triées?",choices = c("non","oui"))
+          ),
+          actionButton("run3", "run")
+        ),
+        mainPanel(
+          plotOutput("plot_quali")
+        )
                   ),#fin du tabpanel
 
                   #tabpanel4
                   tabPanel("Graphique quanti vs quali",
                           sidebarPanel("Informations requises",
-                                      selectInput("var6", " Choisissez une variable quantitative:", choices = names(data_quanti)),
-                                      selectInput("var7","Choisissez une variable qualitative:", choices = names(data_quali)),
-                                      selectInput('plot_type_quali_quanti','Choisissez le type de graphique:', choices = c('barplot','boxplot','scatterplot')),
-                                      conditionalPanel(
-                                        condition = "input.plot_type_quali_quanti == 'barplot'",
-                                        radioButtons("bool","Voulez vous que les barres soient empilées?", choices=c('oui','non'))
-                                      ),
-                                      conditionalPanel(
-                                        condition = "input.plot_type_quali_quanti == 'scatterplot'",
-                                        selectInput("var8", "Choisissez une deuxième variable quantitative:",choices=names(data_quanti)),
-                                        selectInput("cat2","Sur quel modalité voulez vous discriminer?",choices = NULL)
-                                      ),
-                                      actionButton("run4","run")
-                            ),
-                          mainPanel(
-                                    plotOutput("plot_quali_quanti")
-                          )
+                          radioButtons("type_graph","Choix du style de graphiques:",choices = c("classique","ggplot")),
+
+          selectInput("var6", "Choisissez une variable quantitative:", choices = names(data_quanti)),
+          selectInput("var7", "Choisissez une variable qualitative:", choices = names(data_quali)),
+          selectInput('plot_type_quali_quanti', 'Choisissez le type de graphique:', choices = c('barplot', 'boxplot', 'scatterplot')),
+          conditionalPanel(
+            condition = "input.plot_type_quali_quanti == 'scatterplot'",
+            selectInput("var8", "Choisissez une deuxième variable quantitative:", choices = names(data_quanti)),
+            selectInput("cat2", "Sur quel modalité voulez vous discriminer?", choices = NULL)
+          ),
+          actionButton("run4", "run")
+        ),
+        mainPanel(
+          plotOutput("plot_quali_quanti")
+        )
                   )#fin du tabpanel
+
       ), # navbarMenu
       navbarMenu("Predictions",
                   tabPanel("KNNPredictions")
@@ -132,10 +143,19 @@ server <- function(input, output,session) {
     var_qualitative <- input$var_quali
     var_qualitative2 <- input$var7
     modalites <- levels(as.factor(data_quali[,var_qualitative]))
-    modalites2 <- levels(as.factor(data_quali[,var_qualitative2]))
+    modalites2 <- c("toute la population",levels(as.factor(data_quali[,var_qualitative2])))
     # Mettre à jour les choix des selectInput
     updateSelectInput(session, "cat1", choices = modalites)
     updateSelectInput(session, "cat2", choices = modalites2)
+    
+    if(input$plot_type_quali_quanti == "barplot"){
+        updateSelectInput(session,"var6",choices = names(data),label = "Choisissez une variable:")
+    }
+    else{
+        updateSelectInput(session,"var6",choices = names(data_quanti),label = "Choisissez une variable quantitative:")
+    }
+
+
   })
 
   #theme du jeu de donnée
@@ -152,78 +172,90 @@ server <- function(input, output,session) {
 
 
     df <- reactive({
-      reactable(data,
+      data
+      })
+
+    output$dtFinal_data <- renderReactable({
+        reactable(df(),
         columns = list(success = colDef(align = "center", style = "color: red;", filterable = FALSE)),
         fullWidth = TRUE,defaultColDef = colDef(style = "font-style: italic;"),searchable = TRUE,
         filterable = TRUE,highlight = TRUE, showPageSizeOptions = TRUE,defaultPageSize = 10,pageSizeOptions = c(10, 50, 100),theme = theme_dark)
     })
 
-    output$dtFinal_data <- renderReactable({
-        df()
-    })
 
         #################################Résumés statistiques###########################
         resume <- eventReactive(input$run, {
-            summary(data[,input$var1])
-        }, ignoreNULL = FALSE)#ignoreNull=false, permet d'afficher sans cliquer sur run
+            v1 <- input$var1
+            x1 <- data[,v1]
+            if(typeof(x1) == "integer"){##cas ou c'est un variable quanti
+              if(input$bool1 == "oui"){##on regarde une sous partie
+                data_filtre <- data[data[,input$var_quali] == input$cat1, ]
+                n_observations <- length(data_filtre[,v1])
+                frequency <- n_observations / length(x1)#/73000 normalement
+                pop <- round(frequency*100,2)
+                # Création du résumé personnalisé
+                custom_summary <- summary(data_filtre[,v1])
+                custom_summary <- c(custom_summary, N_Observations = n_observations, Pourcentage_population = pop)
+                round(custom_summary,2)
+              }
+              else #on regarde la variable
+                 summary(data[,input$var1])
+            }
+            else{#cas d'une variable qualitative#
+              effectifs <- table(x1)
+              frequence <- round(effectifs/length(x1)*100,2)
+              frequence_cumulés <- cumsum(frequence)
+              table_data <- data.frame(Effectif = as.vector(effectifs), Frequence = as.vector(frequence), Frequence_Cumulees= frequence_cumulés)
+              table_data
+            }
+        }) #ignoreNull=false, permet d'afficher sans cliquer sur run
 
-        resume_filtre <-eventReactive(input$run, {
-          v1 <- input$var_quali
-          v2 <- input$var1
-          data_filtre <- data[data[,v1] == input$cat1, ]
-          n_observations <- length(data_filtre[,v2])
-          frequency <- n_observations / length(data[,v2])#/73000 normalement
-          pop <- round(frequency*100,2)
-          # Création du résumé personnalisé
-          custom_summary <- summary(data_filtre[,v2])
-          custom_summary <- c(custom_summary, N_Observations = n_observations, Pourcentage_population = pop)
-          round(custom_summary,2)
-        }, ignoreNULL = FALSE)
-
-        resume_quali <- eventReactive(input$run, {
-          v_quali <- input$var1
-        effectifs <- table(data_quali[,v_quali])
-        frequence <- round(effectifs/length(data[,v_quali])*100,2)
-        frequence_cumulés <- cumsum(frequence)
-        table_data <- data.frame(Effectif = as.vector(effectifs), Frequence = as.vector(frequence), Frequence_Cumulees= frequence_cumulés)
-        table_data
-        },ignoreNULL = FALSE)
 
 
     output$summary <- renderPrint({
         resume()
     })
 
-    output$sub_summary <- renderPrint({
-        resume_filtre()
-    })
-
-
-    output$summary_quali <- renderPrint({
-        resume_quali()
-    })
-
     #################################PARTIE QUANTITATIF###########################
 
     plot_quanti_print <- eventReactive(input$run2,{
-      ##Histogram##
+      #######Histogram######
       if(input$plot_type == "Histogram"){
-         x <- data[, input$var2]
-        bins <- seq(min(x), max(x), length.out = input$Classes + 1)
-        hist(x,breaks = bins,main="histogramme",col="deeppink", xlab = input$var)
+         histogramme(data,input$var2,input$Classes,"deeppink",input$type_graph)
       }
-      ##scatterplot selon une modalité##
-      else if(input$bool2 == "oui"){
-          moda <- levels(as.factor(data_binaire[,input$var_binaire]))
-          pchs <-  ifelse(data[,input$var_binaire] == moda[1],1,2)
-          couleurs <- ifelse(data[,input$var_binaire] == moda[1], "blue","deeppink")
-          plot(data_quanti[,input$var2],data_quanti[,input$var3], xlab = input$var2, ylab = input$var3,col = couleurs,pch = pchs)
-          legend("topright", legend = moda, pch = c(1,2), col = c("blue","deeppink"), cex = 0.8)
+      #######Densite######
+      else if (input$plot_type == "Density"){
+          modalite <- NULL
+          if(input$var_quali2!="Aucune")
+            modalite <- input$var_quali2
+          densite(data = data,variable = input$var2,modalite=modalite ,type = input$type_graph)
+      }          
+      ######boxplot######
+      else if (input$plot_type == "boxplot"){
+          width <- ifelse(input$bool4 == 'oui',TRUE,FALSE)
+          boitemoustache(data = data,variable = input$var2,nbClasses = input$Classes2,varwidth = width,type = input$type_graph,color = palette_couleurs[1:input$Classes2])#gestion des couleurs
       }
-      ##scatterplot sur toute la population##
-      else 
-          plot(data_quanti[,input$var2],data_quanti[,input$var3], xlab = input$var2, ylab = input$var3,col = "black", pch = 19)
-      })
+        ##scatterplot ##
+      else {
+            modalite <- NULL
+            if(input$bool2 == "oui")
+              modalite <- input$var_binaire
+            scatterplot(data,input$var2,input$var3,input$type_graph,modalite = modalite)
+            
+              #moda <- minmod(data,input$var_binaire)    ##a revoir##
+              #p2 <- ggplot(data, aes(x = x1, y = x2)) + 
+               #     geom_point() + 
+                #    geom_point(
+                 #     data = data |> filter(sex == "F"), 
+                  #    color = "red"
+                   # ) +
+                    #geom_point(
+                     # data = data |> filter(sex == "F"), 
+                      #shape = "circle open", size = 3, color = "red"
+                    #) 
+      }
+      
+    })
 
 
     output$plot_quanti <- renderPlot({
@@ -231,14 +263,17 @@ server <- function(input, output,session) {
     })
 
     
+    
 
 
 
  #################################PARTIE QUALITATIF#############################
     plot_quali_print <- eventReactive(input$run3,{
+      y <- data[, input$var4]
       ##barplot##
-      if(input$plot_type_quali == "barplot")
-          barplot(table(data[, input$var4]), col = palette_couleurs, las = 2)
+      if(input$plot_type_quali == "barplot"){
+        diagbatons(data, input$var4,ifelse(input$bool3=="non",FALSE,TRUE),color = palette_couleurs,type = input$type_graph)
+      }
           ##mosaicplot##
       else
         mosaicplot(table(data[, input$var4], data[, input$var5]),col = palette_couleurs, xlab = input$var4,ylab = input$var5,main = paste("Mosaicplot de ",input$var4,"en fonction de ",input$var5),las = 2)
@@ -253,23 +288,52 @@ server <- function(input, output,session) {
    
 
     plot_quali_quanti_print <- eventReactive(input$run4,{
-        means <- tapply(data_quanti[, input$var6], data_quali[, input$var7], mean)
+        x <- data[,input$var6]
+        y <- data_quali[,input$var7] 
+        
            ##boxplot##
         if(input$plot_type_quali_quanti == "boxplot"){
-          boxplot(data_quanti[,input$var6]~data_quali[,input$var7],col = palette_couleurs,main = paste("boxplot de la variable ",input$var6," en fonction de ",input$var7), ylab = input$var6,xlab = "",las = 2)
-          points(x = 1:length(means), y = means, pch = 19, col = "black") #ajout de la moyenne # nolint
+          boitemoustache(data,input$var6,type = input$type_graph,color = palette_couleurs,modalite = input$var7)
         }
           ##barplot##
         else if (input$plot_type_quali_quanti == "barplot") {
-            empil <- ifelse(input$bool == "oui",FALSE,TRUE)
-            cont <- table(data[,input$var7], data[,input$var6])
-            barplot(cont,beside = empil, col = palette_couleurs,legend.text = TRUE, main = paste("Distribution de ",input$var6," par ",input$var7),
-                    xlab = input$var6,ylab = "Fréquence")
+            diagbatons(data,input$var7,color = palette_couleurs,type = input$type_graph,variable = input$var6)
         }
         ##scatterplot##
         else{
-            data_filtre <- data[data[,input$var7] == input$cat2,]
-            plot(data_filtre[,input$var6],data_filtre[,input$var8],xlab = input$var6, ylab = input$var8,pch=20)
+          if(input$type_graph=="classique"){
+            if(input$cat2 == "toute la population"){
+              mod <- levels(as.factor(y))
+              taille_grille <- floor(sqrt(length(mod)))+1
+              par(mfrow = c(taille_grille,taille_grille))
+              for(i in 1:length(mod)){
+                data_filtre <- data[y == mod[i],]
+                plot(data_filtre[,input$var6],data_filtre[,input$var8],xlab = input$var6, ylab = input$var8,pch=20,main=mod[i])
+              }
+            }
+            else{#on regarde un sous ensemble 
+                data_filtre <- data[y == input$cat2,]
+                plot(data_filtre[,input$var6],data_filtre[,input$var8],xlab = input$var6, ylab = input$var8,pch=20,main=input$cat2)
+            }
+          }
+          else{##cas ggplot
+            if(input$cat2 == "toute la population"){
+              ggplot(data, aes(x = x, y = data[,input$var8])) + 
+              geom_point() + 
+              facet_wrap(~data[,input$var7])
+            }
+            else {#on regarde un sous ensemble
+              data_filtre <- data[y == input$cat2,]
+              ggplot(data_filtre,aes(x = data_filtre[,input$var6], y = data_filtre[,input$var8])) +
+              geom_point() +
+              labs(
+                 x = input$var6,
+                 y = input$var8,
+                 title = input$var7,
+                 caption = "Data from Himalayan Expeditions"
+              )
+            }
+          }
         }
     })
 
@@ -287,7 +351,7 @@ server <- function(input, output,session) {
             paste("data",Sys.Date(), ".csv", sep = ',')
         },
         content <- function(file){
-            write.csv(df(),file)
+            write.csv(data,file)
         }
     )
 }
