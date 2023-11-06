@@ -10,6 +10,7 @@ library(patchwork)
 library(ggridges)
 library(separ)#permet de scinder ma data en quanti, quali et binaire.
 library(compar)
+library(plotly)
 palette_couleurs <- brewer.pal(12, "Set3")
 data <- read.csv("https://www.dropbox.com/scl/fi/d3v41yp6x9cxlqvueoet3/membersClean.csv?rlkey=v9xfdgu6oyubjur9rlu6k9eow&dl=1")
 names_data_quali <- scinde(data,"quali")
@@ -35,7 +36,7 @@ ui <- dashboardPage(
         menuSubItem("Graphique quantitatifs", tabName = "graph_quantitatifs"),
         menuSubItem("Graphique qualitatifs", tabName = "graph_qualitatifs"),
         menuSubItem("Graphique quanti vs quali", tabName = "graph_quanti_quali"),
-        radioButtons("type_graph","Choix du style de graphiques:",choices = c("classique","ggplot"))
+        radioButtons("type_graph","Choix du style de graphiques:",choices = c("classique","ggplot","plotly"))
 
       ),
       menuItem("Predictions", tabName = "predictions",startExpanded = TRUE, menuName = "Predictions",
@@ -106,7 +107,14 @@ ui <- dashboardPage(
           actionButton("run2", "run")
         ),
         mainPanel(
-          plotOutput("plot_quanti")
+          conditionalPanel(
+            condition = "input.type_graph == 'ggplot' || input.type_graph == 'classique'",
+            plotOutput("plot_quanti")
+          ),
+          conditionalPanel(
+            condition = "input.type_graph == 'plotly'",
+            plotlyOutput("plotly_quanti")
+          )
         )
       ),
       tabItem(tabName = "graph_qualitatifs",
@@ -243,7 +251,7 @@ server <- function(input, output,session) {
       ######boxplot######
       else if (input$plot_type == "boxplot"){
           width <- ifelse(input$bool4 == 'oui',TRUE,FALSE)
-          boitemoustache(data = data,variable = input$var2,nbClasses = input$Classes2,varwidth = width,type = input$type_graph,color = palette_couleurs[1:input$Classes2])#gestion des couleurs
+          boitemoustache(data = data,variable = input$var2,nbClasses = input$Classes2,varwidth = width,type = input$type_graph)#palette_couleurs[1:input$Classes2])#gestion des couleurs
       }
         ##scatterplot ##
       else {
@@ -266,10 +274,40 @@ server <- function(input, output,session) {
       }
       
     })
+    plotly_quanti_print <- eventReactive(input$run2,{
+      #######Histogram######
+      if(input$plot_type == "Histogram"){
+         histogramme(data,input$var2,input$Classes,"deeppink",input$type_graph)
+      }
+      #######Densite######
+      else if (input$plot_type == "Density"){
+          modalite <- NULL
+          if(input$var_quali2!="Aucune")
+            modalite <- input$var_quali2
+          densite(data = data,variable = input$var2,modalite=modalite ,type = input$type_graph)
+      }          
+      ######boxplot######
+      else if (input$plot_type == "boxplot"){
+          width <- ifelse(input$bool4 == 'oui',TRUE,FALSE)
+          boitemoustache(data = data,variable = input$var2,nbClasses = input$Classes2,varwidth = width,type = input$type_graph)#palette_couleurs[1:input$Classes2])#gestion des couleurs
+      }
+        ##scatterplot ##
+      else {
+            modalite <- NULL
+            if(input$bool2 == "oui")
+              modalite <- input$var_binaire
+            scatterplot(data,input$var2,input$var3,input$type_graph,modalite = modalite)
+      }
+      
+    })
 
 
     output$plot_quanti <- renderPlot({
        plot_quanti_print()
+    })
+
+    output$plotly_quanti <- renderPlotly({
+       plotly_quanti_print()
     })
 
     
