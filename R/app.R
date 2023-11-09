@@ -3,11 +3,9 @@ library(shinydashboard)
 library(shinythemes)
 library(RColorBrewer)
 library(reactable)
-library(tidyverse)
 library(scales)
 library(ggrepel)
 library(patchwork)
-library(ggridges)
 library(separ)#permet de scinder ma data en quanti, quali et binaire.
 library(compar)
 library(plotly)
@@ -31,15 +29,15 @@ ui <- dashboardPage(
   dashboardSidebar(
     sidebarMenu(
       menuItem("DATA", tabName = "data"),
-      menuItem("Analyse", tabName = "analyse", startExpanded = TRUE, menuName = "Analyse",
-        menuSubItem("Résumés statistiques", tabName = "resume"),
+      menuItem("Résumés statistiques", tabName = "resume"),
+      menuItem("Analyse", tabName = "analyse", startExpanded = FALSE, menuName = "Analyse",
         menuSubItem("Graphique quantitatifs", tabName = "graph_quantitatifs"),
         menuSubItem("Graphique qualitatifs", tabName = "graph_qualitatifs"),
         menuSubItem("Graphique quanti vs quali", tabName = "graph_quanti_quali"),
         radioButtons("type_graph","Choix du style de graphiques:",choices = c("classique","ggplot","plotly"))
 
       ),
-      menuItem("Predictions", tabName = "predictions",startExpanded = TRUE, menuName = "Predictions",
+      menuItem("Predictions", tabName = "predictions",startExpanded = FALSE, menuName = "Predictions",
         menuSubItem("KNN",tabName = "knn"),
         menuSubItem("Tree",tabName = "Arbre de décision")
       )
@@ -108,8 +106,12 @@ ui <- dashboardPage(
         ),
         mainPanel(
           conditionalPanel(
-            condition = "input.type_graph == 'ggplot' || input.type_graph == 'classique'",
+            condition = "input.type_graph == 'classique'",
             plotOutput("plot_quanti")
+          ),
+          conditionalPanel(
+            condition = "input.type_graph == 'ggplot'",
+            plotOutput("ggplot_quanti")
           ),
           conditionalPanel(
             condition = "input.type_graph == 'plotly'",
@@ -192,10 +194,17 @@ server <- function(input, output,session) {
     df <- reactive({
       data
       })
-
+    style_success <- function(value) {
+      if (value) {
+        list(color = "green")
+      } 
+      else {
+        list(color = "red")
+      }
+    }
     output$dtFinal_data <- renderReactable({
         reactable(df(),
-        columns = list(success = colDef(align = "center", style = "color: red;", filterable = FALSE)),
+        columns = list(success = colDef(align = "center", style = style_success, filterable = FALSE)),
         fullWidth = TRUE,defaultColDef = colDef(style = "font-style: italic;"),searchable = TRUE,
         filterable = TRUE,highlight = TRUE, showPageSizeOptions = TRUE,defaultPageSize = 10,pageSizeOptions = c(10, 50, 100),theme = theme_dark)
     })
@@ -237,73 +246,27 @@ server <- function(input, output,session) {
     #################################PARTIE QUANTITATIF###########################
 
     plot_quanti_print <- eventReactive(input$run2,{
-      #######Histogram######
-      if(input$plot_type == "Histogram"){
-         histogramme(data,input$var2,input$Classes,"deeppink",input$type_graph)
-      }
-      #######Densite######
-      else if (input$plot_type == "Density"){
-          modalite <- NULL
-          if(input$var_quali2!="Aucune")
-            modalite <- input$var_quali2
-          densite(data = data,variable = input$var2,modalite=modalite ,type = input$type_graph)
-      }          
-      ######boxplot######
-      else if (input$plot_type == "boxplot"){
-          width <- ifelse(input$bool4 == 'oui',TRUE,FALSE)
-          boitemoustache(data = data,variable = input$var2,nbClasses = input$Classes2,varwidth = width,type = input$type_graph)#palette_couleurs[1:input$Classes2])#gestion des couleurs
-      }
-        ##scatterplot ##
-      else {
-            modalite <- NULL
-            if(input$bool2 == "oui")
-              modalite <- input$var_binaire
-            scatterplot(data,input$var2,input$var3,input$type_graph,modalite = modalite)
-            
-              #moda <- minmod(data,input$var_binaire)    ##a revoir##
-              #p2 <- ggplot(data, aes(x = x1, y = x2)) + 
-               #     geom_point() + 
-                #    geom_point(
-                 #     data = data |> filter(sex == "F"), 
-                  #    color = "red"
-                   # ) +
-                    #geom_point(
-                     # data = data |> filter(sex == "F"), 
-                      #shape = "circle open", size = 3, color = "red"
-                    #) 
-      }
-      
+      plot_quanti(plot_type = input$plot_type,data=df(),variable_quanti1 = input$var2,variable_quanti2 = input$var3,
+      variable_binaire=input$var_binaire,modalites = input$var_quali2,breaksHist = input$Classes,
+      breaksBox = input$Classes2,ajust = input$bool4,discr=input$bool2,type = "classique") 
+    })
+    ggplot_quanti_print <- eventReactive(input$run2,{
+      plot_quanti(plot_type = input$plot_type,data=df(),variable_quanti1 = input$var2,variable_quanti2 = input$var3,
+      variable_binaire=input$var_binaire,modalites = input$var_quali2,breaksHist = input$Classes,
+      breaksBox = input$Classes2,ajust = input$bool4,discr=input$bool2,type = "ggplot") 
     })
     plotly_quanti_print <- eventReactive(input$run2,{
-      #######Histogram######
-      if(input$plot_type == "Histogram"){
-         histogramme(data,input$var2,input$Classes,"deeppink",input$type_graph)
-      }
-      #######Densite######
-      else if (input$plot_type == "Density"){
-          modalite <- NULL
-          if(input$var_quali2!="Aucune")
-            modalite <- input$var_quali2
-          densite(data = data,variable = input$var2,modalite=modalite ,type = input$type_graph)
-      }          
-      ######boxplot######
-      else if (input$plot_type == "boxplot"){
-          width <- ifelse(input$bool4 == 'oui',TRUE,FALSE)
-          boitemoustache(data = data,variable = input$var2,nbClasses = input$Classes2,varwidth = width,type = input$type_graph)#palette_couleurs[1:input$Classes2])#gestion des couleurs
-      }
-        ##scatterplot ##
-      else {
-            modalite <- NULL
-            if(input$bool2 == "oui")
-              modalite <- input$var_binaire
-            scatterplot(data,input$var2,input$var3,input$type_graph,modalite = modalite)
-      }
-      
+      plot_quanti(plot_type = input$plot_type,data=df(),variable_quanti1 = input$var2,variable_quanti2 = input$var3,
+      variable_binaire=input$var_binaire,modalites = input$var_quali2,breaksHist = input$Classes,
+      breaksBox = input$Classes2,ajust = input$bool4,discr=input$bool2,type = "plotly")
     })
 
 
     output$plot_quanti <- renderPlot({
        plot_quanti_print()
+    })
+    output$ggplot_quanti <- renderPlot({
+      ggplot_quanti_print()
     })
 
     output$plotly_quanti <- renderPlotly({

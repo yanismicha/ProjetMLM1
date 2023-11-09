@@ -220,3 +220,10 @@ breaks <- seq(min(x), max(x), length.out = num_classes + 1)
 labels <- paste0("(", round(breaks[-length(breaks)], 0), ",", round(breaks[-1], 0), "]")
 
 levels(cut(year,breaks=breaks,labels=labels))
+
+mosaicplot(table(data[, "season"], data[, "sex"]),col = palette_couleurs,las = 2)
+
+ggplot(data = data) +
+  geom_mosaic(aes(x = product(sex, season), fill=season)) 
+
+
