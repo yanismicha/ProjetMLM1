@@ -158,7 +158,18 @@ ui <- dashboardPage(
           actionButton("run4", "run")
         ),
         mainPanel(
-          plotOutput("plot_quali_quanti")
+          conditionalPanel(
+            condition = "input.type_graph == 'classique'",
+            plotOutput("plot_quali_quanti")     
+          ),
+          conditionalPanel(
+            condition = "input.type_graph == 'ggplot'",
+            plotOutput("ggplot_quali_quanti")     
+          ),
+          conditionalPanel(
+            condition = "input.type_graph == 'plotly'",
+            plotlyOutput("plotly_quali_quanti")     
+          )
         )
       )
     )
@@ -308,57 +319,23 @@ server <- function(input, output,session) {
    
 
     plot_quali_quanti_print <- eventReactive(input$run4,{
-        x <- data[,input$var6]
-        y <- data_quali[,input$var7] 
-        
-           ##boxplot##
-        if(input$plot_type_quali_quanti == "boxplot"){
-          boitemoustache(data,input$var6,type = input$type_graph,color = palette_couleurs,modalite = input$var7)
-        }
-          ##barplot##
-        else if (input$plot_type_quali_quanti == "barplot") {
-            diagbatons(data,input$var7,color = palette_couleurs,type = input$type_graph,variable = input$var6)
-        }
-        ##scatterplot##
-        else{
-          if(input$type_graph=="classique"){
-            if(input$cat2 == "toute la population"){
-              mod <- levels(as.factor(y))
-              taille_grille <- floor(sqrt(length(mod)))+1
-              par(mfrow = c(taille_grille,taille_grille))
-              for(i in 1:length(mod)){
-                data_filtre <- data[y == mod[i],]
-                plot(data_filtre[,input$var6],data_filtre[,input$var8],xlab = input$var6, ylab = input$var8,pch=20,main=mod[i])
-              }
-            }
-            else{#on regarde un sous ensemble 
-                data_filtre <- data[y == input$cat2,]
-                plot(data_filtre[,input$var6],data_filtre[,input$var8],xlab = input$var6, ylab = input$var8,pch=20,main=input$cat2)
-            }
-          }
-          else{##cas ggplot
-            if(input$cat2 == "toute la population"){
-              ggplot(data, aes(x = x, y = data[,input$var8])) + 
-              geom_point() + 
-              facet_wrap(~data[,input$var7])
-            }
-            else {#on regarde un sous ensemble
-              data_filtre <- data[y == input$cat2,]
-              ggplot(data_filtre,aes(x = data_filtre[,input$var6], y = data_filtre[,input$var8])) +
-              geom_point() +
-              labs(
-                 x = input$var6,
-                 y = input$var8,
-                 title = input$var7,
-                 caption = "Data from Himalayan Expeditions"
-              )
-            }
-          }
-        }
+        plot_quanti_quali(input$plot_type_quali_quanti,df(),input$var6,input$var8,input$var7,input$cat2,palette_couleurs,"classique")
+    })
+    ggplot_quali_quanti_print <- eventReactive(input$run4,{
+        plot_quanti_quali(input$plot_type_quali_quanti,df(),input$var6,input$var8,input$var7,input$cat2,palette_couleurs,"ggplot")
+    })
+    plotly_quali_quanti_print <- eventReactive(input$run4,{
+        plot_quanti_quali(input$plot_type_quali_quanti,df(),input$var6,input$var8,input$var7,input$cat2,palette_couleurs,"plotly")
     })
 
     output$plot_quali_quanti <- renderPlot({
       plot_quali_quanti_print()
+    })
+    output$ggplot_quali_quanti <- renderPlot({
+      ggplot_quali_quanti_print()
+    })
+    output$plotly_quali_quanti <- renderPlotly({
+      plotly_quali_quanti_print()
     })
 
    
