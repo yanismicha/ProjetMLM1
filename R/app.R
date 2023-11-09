@@ -5,18 +5,19 @@ library(RColorBrewer)
 library(reactable)
 library(scales)
 library(ggrepel)
+library(ggmosaic)
 library(patchwork)
 library(separ)#permet de scinder ma data en quanti, quali et binaire.
 library(compar)
 library(plotly)
 palette_couleurs <- brewer.pal(12, "Set3")
-data <- read.csv("https://www.dropbox.com/scl/fi/d3v41yp6x9cxlqvueoet3/membersClean.csv?rlkey=v9xfdgu6oyubjur9rlu6k9eow&dl=1")
-names_data_quali <- scinde(data,"quali")
-names_data_quanti <- scinde(data,"quanti")
-names_data_binaire <- scinde(data,"binaire")
-data_quanti <- data[,names_data_quanti]
-data_quali <- data[,names_data_quali]
-data_binaire <- data[,names_data_binaire]
+dt <- read.csv("https://www.dropbox.com/scl/fi/d3v41yp6x9cxlqvueoet3/membersClean.csv?rlkey=v9xfdgu6oyubjur9rlu6k9eow&dl=1")
+names_data_quali <- scinde(dt,"quali")
+names_data_quanti <- scinde(dt,"quanti")
+names_data_binaire <- scinde(dt,"binaire")
+data_quanti <- dt[,names_data_quanti]
+data_quali <- dt[,names_data_quali]
+data_binaire <- dt[,names_data_binaire]
 
 #a voir
 #data_quanti_names <- toJSON(names(data_quanti))
@@ -59,7 +60,7 @@ ui <- dashboardPage(
       ),
       tabItem(tabName = "resume",
         sidebarPanel("Informations requises",
-          selectInput("var1", " Choisissez une variable", choices = names(data)),
+          selectInput("var1", " Choisissez une variable", choices = names(dt)),
           conditionalPanel(
             condition = '["year","age"].includes(input.var1)',
             radioButtons("bool1", "Souhaitez vous regarder une partie de la population?", choices = c('non', 'oui')),
@@ -142,7 +143,10 @@ ui <- dashboardPage(
             condition = "input.type_graph == 'ggplot'",
             plotOutput("ggplot_quali")          
           ),
-          
+          conditionalPanel(
+            condition = "input.type_graph == 'plotly'",
+            plotOutput("plotly_quali")          
+          )
         )
       ),
       tabItem(tabName = "graph_quanti_quali",
@@ -182,8 +186,14 @@ ui <- dashboardPage(
           selectInput("sex", "Votre genre?", choices = NULL),
           numericInput("age", "Quel est votre âge?", value=20,min=0,max=100),
           selectInput("solo", "Comptez vous le faire seul?", choices = NULL),
-          selectInput("oxygen", "Voulez vous utiliser de l'oxygène", choices = NULL)
-         )
+          selectInput("oxygen", "Voulez vous utiliser de l'oxygène", choices = NULL),
+          selectInput("hired", "Etes vous un professionnel?", choices = NULL),
+          actionButton("run5","run")
+        ),
+        mainPanel(
+          h1("Prédictions Python:"),
+          textOutput("predknn")
+        )
       )
 
     )
@@ -205,15 +215,15 @@ server <- function(input, output,session) {
     updateSelectInput(session,"season",choices=levels(as.factor(df()$season)))
     updateSelectInput(session,"citizenship",choices=levels(as.factor(df()$citizenship)))
     updateSelectInput(session,"role",choices=levels(as.factor(df()$expedition_role)))
-    updateSelectInput(session,"year",choices=levels(as.factor(df()$year)))
     updateSelectInput(session,"sex",choices=levels(as.factor(df()$sex)))
-    updateSelectInput(session,"age",choices=levels(as.factor(df()$age)))
     updateSelectInput(session,"solo",choices=levels(as.factor(df()$solo)))
     updateSelectInput(session,"oxygen",choices=levels(as.factor(df()$oxygen_used)))
+    updateSelectInput(session,"hired",choices=levels(as.factor(df()$hired)))
+
 
     
     if(input$plot_type_quali_quanti == "barplot"){
-        updateSelectInput(session,"var6",choices = names(data),label = "Choisissez une variable:")
+        updateSelectInput(session,"var6",choices = names(dt),label = "Choisissez une variable:")
     }
     else{
         updateSelectInput(session,"var6",choices = names(data_quanti),label = "Choisissez une variable quantitative:")
@@ -236,7 +246,7 @@ server <- function(input, output,session) {
 
 
     df <- reactive({
-      data
+      dt
       })
     style_success <- function(value) {
       if (value) {
@@ -257,10 +267,10 @@ server <- function(input, output,session) {
         #################################Résumés statistiques###########################
         resume <- eventReactive(input$run, {
             v1 <- input$var1
-            x1 <- data[,v1]
+            x1 <- df()[,v1]
             if(typeof(x1) == "integer"){##cas ou c'est un variable quanti
               if(input$bool1 == "oui"){##on regarde une sous partie
-                data_filtre <- data[data[,input$var_quali] == input$cat1, ]
+                data_filtre <- df()[df()[,input$var_quali] == input$cat1, ]
                 n_observations <- length(data_filtre[,v1])
                 frequency <- n_observations / length(x1)#/73000 normalement
                 pop <- round(frequency*100,2)
@@ -270,7 +280,7 @@ server <- function(input, output,session) {
                 round(custom_summary,2)
               }
               else #on regarde la variable
-                 summary(data[,input$var1])
+                 summary(df()[,input$var1])
             }
             else{#cas d'une variable qualitative#
               effectifs <- table(x1)
@@ -330,12 +340,18 @@ server <- function(input, output,session) {
     ggplot_quali_print <- eventReactive(input$run3,{
          plot_quali(plot_type = input$plot_type_quali,df(),input$var4,input$var5,input$bool3,palette_couleurs,"ggplot")
     })
+    plotly_quali_print <- eventReactive(input$run3,{
+         plot_quali(plot_type = input$plot_type_quali,df(),input$var4,input$var5,input$bool3,palette_couleurs,"plotly")
+    })
 
     output$plot_quali <- renderPlot({
        plot_quali_print()
     })
     output$ggplot_quali <- renderPlot({
        ggplot_quali_print()
+    })
+    output$plotly_quali <- renderPlotly({
+      plotly_quali_print()
     })
 
 
@@ -364,6 +380,18 @@ server <- function(input, output,session) {
     })
 
    
+
+
+ #################################PARTIE PREDICTIONS PYTHON#########################
+ predict_knn <- eventReactive(input$run5,{
+    ind <- c(input$peak,input$season,input$citizenship,input$role,input$year,0,input$age,0,0,1,0,0)
+    predict <- KNN_Process(data,ind,target)
+    paste("Vous avez ",round(predict[[2]][2]*100,0),"% de chances de réussir")
+ })
+
+  output$predknn <- renderPrint({
+    predict_knn()
+  })
  
 
 
@@ -373,7 +401,7 @@ server <- function(input, output,session) {
             paste("data",Sys.Date(), ".csv", sep = ',')
         },
         content <- function(file){
-            write.csv(data,file)
+            write.csv(df(),file)
         }
     )
 }
