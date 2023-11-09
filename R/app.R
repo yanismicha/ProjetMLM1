@@ -134,7 +134,15 @@ ui <- dashboardPage(
           actionButton("run3", "run")
         ),
         mainPanel(
-          plotOutput("plot_quali")
+          conditionalPanel(
+            condition = "input.type_graph == 'classique'",
+            plotOutput("plot_quali")          
+          ),
+          conditionalPanel(
+            condition = "input.type_graph == 'ggplot'",
+            plotOutput("ggplot_quali")          
+          ),
+          
         )
       ),
       tabItem(tabName = "graph_quanti_quali",
@@ -280,17 +288,18 @@ server <- function(input, output,session) {
 
  #################################PARTIE QUALITATIF#############################
     plot_quali_print <- eventReactive(input$run3,{
-      y <- data[, input$var4]
-      ##barplot##
-      if(input$plot_type_quali == "barplot"){
-        diagbatons(data, input$var4,ifelse(input$bool3=="non",FALSE,TRUE),color = palette_couleurs,type = input$type_graph)
-      }
-          ##mosaicplot##
-      else
-        mosaicplot(table(data[, input$var4], data[, input$var5]),col = palette_couleurs, xlab = input$var4,ylab = input$var5,main = paste("Mosaicplot de ",input$var4,"en fonction de ",input$var5),las = 2)
+         plot_quali(plot_type = input$plot_type_quali,df(),input$var4,input$var5,input$bool3,palette_couleurs,"classique")
     })
+
+    ggplot_quali_print <- eventReactive(input$run3,{
+         plot_quali(plot_type = input$plot_type_quali,df(),input$var4,input$var5,input$bool3,palette_couleurs,"ggplot")
+    })
+
     output$plot_quali <- renderPlot({
        plot_quali_print()
+    })
+    output$ggplot_quali <- renderPlot({
+       ggplot_quali_print()
     })
 
 
