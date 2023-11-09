@@ -6,7 +6,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 import time as tm
 
-data = pd.read_csv("../DataSets/membersClean.csv")
+data = pd.read_csv("DataSets/membersClean.csv")
 target = data.success
 print("Load success")
 
