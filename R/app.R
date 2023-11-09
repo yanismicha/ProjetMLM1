@@ -171,7 +171,21 @@ ui <- dashboardPage(
             plotlyOutput("plotly_quali_quanti")     
           )
         )
+      ),
+      tabItem(tabName = "knn",
+         sidebarPanel("Dites m'en plus sur vous:", 
+          selectInput("peak", "Quel Sommet comptez vous grimper?", choices = NULL),
+          selectInput("season", "Quel saison souhaitez vous grimper?", choices = NULL),
+          selectInput("citizenship", "Votre nationalité:", choices = NULL),
+          selectInput("role", "Votre role dans la cordée?", choices = NULL),
+          numericInput("year", "En quel année?", value=2023,min=1900,max=3000),
+          selectInput("sex", "Votre genre?", choices = NULL),
+          numericInput("age", "Quel est votre âge?", value=20,min=0,max=100),
+          selectInput("solo", "Comptez vous le faire seul?", choices = NULL),
+          selectInput("oxygen", "Voulez vous utiliser de l'oxygène", choices = NULL)
+         )
       )
+
     )
   )
 )
@@ -186,6 +200,17 @@ server <- function(input, output,session) {
     # Mettre à jour les choix des selectInput
     updateSelectInput(session, "cat1", choices = modalites)
     updateSelectInput(session, "cat2", choices = modalites2)
+    #predictions#
+    updateSelectInput(session,"peak",choices=levels(as.factor(df()$peak_name)))
+    updateSelectInput(session,"season",choices=levels(as.factor(df()$season)))
+    updateSelectInput(session,"citizenship",choices=levels(as.factor(df()$citizenship)))
+    updateSelectInput(session,"role",choices=levels(as.factor(df()$expedition_role)))
+    updateSelectInput(session,"year",choices=levels(as.factor(df()$year)))
+    updateSelectInput(session,"sex",choices=levels(as.factor(df()$sex)))
+    updateSelectInput(session,"age",choices=levels(as.factor(df()$age)))
+    updateSelectInput(session,"solo",choices=levels(as.factor(df()$solo)))
+    updateSelectInput(session,"oxygen",choices=levels(as.factor(df()$oxygen_used)))
+
     
     if(input$plot_type_quali_quanti == "barplot"){
         updateSelectInput(session,"var6",choices = names(data),label = "Choisissez une variable:")
