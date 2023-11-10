@@ -1,15 +1,51 @@
-library(shiny)
-library(shinydashboard)
-library(shinythemes)
-library(RColorBrewer)
-library(reactable)
-library(scales)
-library(ggrepel)
-library(ggmosaic)
-library(patchwork)
-library(separ)#permet de scinder ma data en quanti, quali et binaire.
-library(compar)
-library(plotly)
+if(!require(shiny)){
+  install.packages("shiny")
+}
+require(shiny)
+if(!require(shinydashboard)){
+  install.packages("shinydashboard")
+}
+if(!require(shinythemes)){
+  install.packages("shinythemes")
+}
+if(!require(RColorBrewer)){
+  install.packages("RColorBrewer")
+}
+if(!require(reactable)){
+  install.packages("reactable")
+}
+if(!require(scales)){
+  install.packages("scales")
+}
+if(!require(ggrepel)){
+  install.packages("ggrepel")
+}
+if(!require(ggmosaic)){
+  install.packages("ggmosaic")
+}
+if(!require(patchwork)){
+  install.packages("patchwork")
+}
+if(!require(separ)){
+  install.packages("separ")
+}
+if(!require(compar)){
+  install.packages("compar")
+}
+if(!require(plotly)){
+  install.packages("plotly")
+}
+require(shinydashboard)
+require(shinythemes)
+require(RColorBrewer)
+require(reactable)
+require(scales)
+require(ggrepel)
+require(ggmosaic)
+require(patchwork)
+require(separ)#permet de scinder ma data en quanti, quali et binaire.
+require(compar)
+require(plotly)
 palette_couleurs <- brewer.pal(12, "Set3")
 dt <- read.csv("https://www.dropbox.com/scl/fi/d3v41yp6x9cxlqvueoet3/membersClean.csv?rlkey=v9xfdgu6oyubjur9rlu6k9eow&dl=1")
 names_data_quali <- scinde(dt,"quali")
