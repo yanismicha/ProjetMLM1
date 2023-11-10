@@ -145,7 +145,7 @@ ui <- dashboardPage(
           ),
           conditionalPanel(
             condition = "input.type_graph == 'plotly'",
-            plotOutput("plotly_quali")          
+            plotlyOutput("plotly_quali")
           )
         )
       ),

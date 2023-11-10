@@ -72,3 +72,15 @@ plot %>% layout(barmode= "stack",xaxis=list(title="peak_name"))
 
 
 
+plot(
+    dtFinal, x=:age, y=:year, facet_col=:season,
+    kind="scatter", mode="markers",
+    Layout(
+        width=800, height=800,
+        margin=attr(l=20,r=20,t=20,b=20),
+        paper_bgcolor="LightSteelBlue"
+    )
+)
+plot<- plot_ly(data[c(sample(73000,100)),], x= ~age,y=~year,type="scatter",)
+plot
+
