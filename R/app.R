@@ -63,8 +63,8 @@ data_binaire <- dt[,names_data_binaire]
 
 ui <- dashboardPage(
   dashboardHeader(title = "M&N"),
-  dashboardSidebar(
-    sidebarMenu(
+      dashboardSidebar(
+      sidebarMenu(
       menuItem("DATA", tabName = "data"),
       menuItem("Résumés statistiques", tabName = "resume"),
       menuItem("Analyse", tabName = "analyse", startExpanded = FALSE, menuName = "Analyse",
@@ -77,7 +77,8 @@ ui <- dashboardPage(
       menuItem("Predictions", tabName = "predictions",startExpanded = FALSE, menuName = "Predictions",
         menuSubItem("KNN",tabName = "knn"),
         menuSubItem("Tree",tabName = "Arbre de décision")
-      )
+      ),
+      actionButton("guide","Guide")
     )
   ),
   dashboardBody( tags$style(HTML("
@@ -233,10 +234,15 @@ ui <- dashboardPage(
       )
 
     )
-  )
+  ),
+  use_cicerone()
 )
 
 server <- function(input, output,session) {
+  
+  guide$
+    init()
+    
   
   observe({
     var_qualitative <- input$var_quali
@@ -266,6 +272,9 @@ server <- function(input, output,session) {
     }
 
 
+  })
+   observeEvent(input$guide, {
+    guide$start()
   })
 
   #theme du jeu de donnée
@@ -325,7 +334,7 @@ server <- function(input, output,session) {
               table_data <- data.frame(Effectif = as.vector(effectifs), Frequence = as.vector(frequence), Frequence_Cumulees= frequence_cumulés)
               table_data
             }
-        }) #ignoreNull=false, permet d'afficher sans cliquer sur run
+        },ignoreNULL = FALSE) #ignoreNull=false, permet d'afficher sans cliquer sur run
 
 
 
