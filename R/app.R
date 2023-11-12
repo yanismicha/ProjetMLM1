@@ -35,6 +35,10 @@ if(!require(compar)){
 if(!require(plotly)){
   install.packages("plotly")
 }
+if(!require(shinyWidgets)){
+  install.packages("shinyWidgets")
+}
+require(shinyWidgets)
 require(shinydashboard)
 require(shinythemes)
 require(RColorBrewer)
@@ -54,7 +58,7 @@ names_data_binaire <- scinde(dt,"binaire")
 data_quanti <- dt[,names_data_quanti]
 data_quali <- dt[,names_data_quali]
 data_binaire <- dt[,names_data_binaire]
-
+source("R\\guide.r")
 #a voir
 #data_quanti_names <- toJSON(names(data_quanti))
 ######fonctions à mettre dans un package#######
@@ -71,14 +75,13 @@ ui <- dashboardPage(
         menuSubItem("Graphique quantitatifs", tabName = "graph_quantitatifs"),
         menuSubItem("Graphique qualitatifs", tabName = "graph_qualitatifs"),
         menuSubItem("Graphique quanti vs quali", tabName = "graph_quanti_quali"),
-        radioButtons("type_graph","Choix du style de graphiques:",choices = c("classique","ggplot","plotly"))
-
+        prettyRadioButtons(inputId = "type_graph",label = "Choix du style de graphique:", choices = c("classique","ggplot","plotly"),
+        icon = icon("check"), bigger = FALSE,status = "info",animation = "jelly")
       ),
       menuItem("Predictions", tabName = "predictions",startExpanded = FALSE, menuName = "Predictions",
         menuSubItem("KNN",tabName = "knn"),
         menuSubItem("Tree",tabName = "Arbre de décision")
-      ),
-      actionButton("guide","Guide")
+      )
     )
   ),
   dashboardBody( tags$style(HTML("
@@ -90,13 +93,16 @@ ui <- dashboardPage(
     tabItems(
       tabItem(tabName = "data",
         mainPanel(
-          h1("Expeditions_Himalayan"),
+          actionBttn(inputId = "guide",label = "Guide", style = "stretch",color = "primary"),
+          h1("Expeditions_Himalayan",id= "title"),
           reactableOutput('dtFinal_data',width = "900px"),
           downloadButton('save_data', 'Save to CSV')
         )
       ),
       tabItem(tabName = "resume",
-        sidebarPanel("Informations requises",
+        sidebarPanel(
+          actionBttn(inputId = "guide1",label = "Guide", style = "stretch",color = "primary"),
+          h2("Informations requises:"),
           selectInput("var1", " Choisissez une variable", choices = names(dt)),
           conditionalPanel(
             condition = '["year","age"].includes(input.var1)',
@@ -107,7 +113,7 @@ ui <- dashboardPage(
               selectInput("cat1", "Quel partie de la population souhaitez vous regarder?", choices = NULL)
             )
           ),
-          actionButton("run", "run")
+          actionBttn(inputId = "run",label = "run", style = "unite",size = "md",color = "royal")
         ),
         mainPanel(
           h1("Résumé statistiques"),
@@ -115,7 +121,9 @@ ui <- dashboardPage(
         )
       ),
       tabItem(tabName = "graph_quantitatifs",
-        sidebarPanel("Informations requises",
+        sidebarPanel(
+          actionBttn(inputId = "guide2",label = "Guide", style = "stretch",color = "primary"),
+          h2("Informations requises"),
           selectInput("var2", " Choisissez une variable:", choices = names(data_quanti)),
           selectInput('plot_type', 'Choisissez le type de graphique:', choices = c('Histogram', 'scatterplot','Density','boxplot')),
           conditionalPanel(
@@ -140,7 +148,7 @@ ui <- dashboardPage(
             condition = "input.plot_type == 'Density'",
             selectInput("var_quali2","Variable à discriminer:",choices = c("Aucune",names(data_quali)))
           ),
-          actionButton("run2", "run")
+          actionBttn(inputId = "run2",label = "run", style = "unite",size = "md",color = "royal")
         ),
         mainPanel(
           conditionalPanel(
@@ -158,7 +166,9 @@ ui <- dashboardPage(
         )
       ),
       tabItem(tabName = "graph_qualitatifs",
-        sidebarPanel("Informations requises",
+        sidebarPanel(
+          actionBttn(inputId = "guide3",label = "Guide", style = "stretch",color = "primary"),
+          h2("Informations requises"),
           selectInput("var4", " Choisissez une variable", choices = names(data_quali)),
           selectInput('plot_type_quali', 'Choisissez le type de graphique:', choices = c('barplot', 'mosaicplot')),
           conditionalPanel(
@@ -169,7 +179,7 @@ ui <- dashboardPage(
             condition = "input.plot_type_quali == 'barplot'",
             radioButtons("bool3","Voulez vous que les barres soient triées?",choices = c("non","oui"))
           ),
-          actionButton("run3", "run")
+          actionBttn(inputId = "run3",label = "run", style = "unite",size = "md",color = "royal")
         ),
         mainPanel(
           conditionalPanel(
@@ -187,7 +197,9 @@ ui <- dashboardPage(
         )
       ),
       tabItem(tabName = "graph_quanti_quali",
-        sidebarPanel("Informations requises",
+        sidebarPanel(
+          actionBttn(inputId = "guide4",label = "Guide", style = "stretch",color = "primary"),
+          h2("Informations requises"),
           selectInput("var6", "Choisissez une variable quantitative:", choices = names(data_quanti)),
           selectInput("var7", "Choisissez une variable qualitative:", choices = names(data_quali)),
           selectInput('plot_type_quali_quanti', 'Choisissez le type de graphique:', choices = c('barplot', 'boxplot', 'scatterplot')),
@@ -196,7 +208,7 @@ ui <- dashboardPage(
             selectInput("var8", "Choisissez une deuxième variable quantitative:", choices = names(data_quanti)),
             selectInput("cat2", "Sur quel modalité voulez vous discriminer?", choices = NULL)
           ),
-          actionButton("run4", "run")
+          actionBttn(inputId = "run4",label = "run", style = "unite",size = "md",color = "royal")
         ),
         mainPanel(
           conditionalPanel(
@@ -214,7 +226,9 @@ ui <- dashboardPage(
         )
       ),
       tabItem(tabName = "knn",
-         sidebarPanel("Dites m'en plus sur vous:", 
+         sidebarPanel(
+          actionBttn(inputId = "guide5",label = "Guide", style = "stretch",color = "primary"),
+          h2("Dites m'en plus sur vous:",id="title3"), 
           selectInput("peak", "Quel Sommet comptez vous grimper?", choices = NULL),
           selectInput("season", "Quel saison souhaitez vous grimper?", choices = NULL),
           selectInput("citizenship", "Votre nationalité:", choices = NULL),
@@ -225,11 +239,11 @@ ui <- dashboardPage(
           selectInput("solo", "Comptez vous le faire seul?", choices = NULL),
           selectInput("oxygen", "Voulez vous utiliser de l'oxygène", choices = NULL),
           selectInput("hired", "Etes vous un professionnel?", choices = NULL),
-          actionButton("run5","run")
+          actionBttn(inputId = "run5",label = "run", style = "unite",size = "md",color = "royal")
         ),
         mainPanel(
           h1("Prédictions Python:"),
-          textOutput("predknn")
+          verbatimTextOutput("predknn")
         )
       )
 
@@ -240,8 +254,36 @@ ui <- dashboardPage(
 
 server <- function(input, output,session) {
   
-  guide$
+  
+###traitement des guides des différentes pages###
+guide$
     init()
+
+guide1$init()
+guide2$init()
+guide3$init()
+guide4$init()
+guide5$init()
+
+
+   observeEvent(input$guide, {
+    guide$start()
+  })
+   observeEvent(input$guide1, {
+    guide1$start()
+  })
+    observeEvent(input$guide2, {
+    guide2$start()
+  })
+   observeEvent(input$guide3, {
+    guide3$start()
+  })
+  observeEvent(input$guide4, {
+    guide4$start()
+  })
+  observeEvent(input$guide5, {
+    guide5$start()
+  })
     
   
   observe({
@@ -273,11 +315,11 @@ server <- function(input, output,session) {
 
 
   })
-   observeEvent(input$guide, {
-    guide$start()
-  })
 
-  #theme du jeu de donnée
+
+
+
+  ###theme du jeu de donnée###
     theme_dark <-reactableTheme(
       color = "hsl(233, 9%, 87%)",
       backgroundColor = "hsl(233, 9%, 19%)",
@@ -303,8 +345,8 @@ server <- function(input, output,session) {
     }
     output$dtFinal_data <- renderReactable({
         reactable(df(),
-        columns = list(success = colDef(align = "center", style = style_success, filterable = FALSE)),
-        fullWidth = TRUE,defaultColDef = colDef(style = "font-style: italic;"),searchable = TRUE,
+        columns = list(success = colDef(align = "center", #style = style_success (plus joli mais long a lancer;)
+        , filterable = FALSE)),fullWidth = TRUE,defaultColDef = colDef(style = "font-style: italic;"),searchable = TRUE,
         filterable = TRUE,highlight = TRUE, showPageSizeOptions = TRUE,defaultPageSize = 10,pageSizeOptions = c(10, 50, 100),theme = theme_dark)
     })
 
@@ -435,7 +477,8 @@ server <- function(input, output,session) {
  })
 
   output$predknn <- renderPrint({
-    predict_knn()
+    #predict_knn()
+    "hello"
   })
  
 
