@@ -48,7 +48,7 @@ require(ggrepel)
 require(ggmosaic)
 require(patchwork)
 require(separ)#permet de scinder ma data en quanti, quali et binaire.
-require(compar)
+require(compar)#permet de comparer les plots.
 require(plotly)
 palette_couleurs <- brewer.pal(12, "Set3")
 dt <- read.csv("https://www.dropbox.com/scl/fi/d3v41yp6x9cxlqvueoet3/membersClean.csv?rlkey=v9xfdgu6oyubjur9rlu6k9eow&dl=1")
@@ -97,6 +97,9 @@ ui <- dashboardPage(
           h1("Expeditions_Himalayan",id= "title"),
           reactableOutput('dtFinal_data',width = "900px"),
           downloadButton('save_data', 'Save to CSV')
+          #downloadBttn(outputId = "save_data",label = "Save to CSV", 
+            #color = "success",size="xs",style="gradient"
+          #)
         )
       ),
       tabItem(tabName = "resume",
