@@ -462,7 +462,23 @@ guide5$init()
         plot_quanti_quali(input$plot_type_quali_quanti,df(),input$var6,input$var8,input$var7,input$cat2,palette_couleurs,"ggplot")
     })
     plotly_quali_quanti_print <- eventReactive(input$run4,{
-        plot_quanti_quali(input$plot_type_quali_quanti,df(),input$var6,input$var8,input$var7,input$cat2,palette_couleurs,"plotly")
+        if(input$plot_type_quali_quanti=="scatterplot" && input$cat2=="toute la population"){
+          plot_ly() %>%
+          add_trace(
+            type = "scatter",
+            mode = "lines",
+            x = c(1, 2, 1.5, 1),
+            y = c(1, 1, 2, 1),
+            line = list(color = "red", width = 2)
+          ) %>%
+          layout(
+            title = "En Chantier",
+            xaxis = list(title = "En chantier"),
+            yaxis = list(title = "En chantier")
+          )
+        }
+        else
+          plot_quanti_quali(input$plot_type_quali_quanti,df(),input$var6,input$var8,input$var7,input$cat2,palette_couleurs,"plotly")
     })
 
     output$plot_quali_quanti <- renderPlot({
