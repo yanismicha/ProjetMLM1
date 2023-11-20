@@ -80,7 +80,7 @@ ui <- dashboardPage(
       ),
       menuItem("Predictions", tabName = "predictions",startExpanded = FALSE, menuName = "Predictions",
         menuSubItem("KNN",tabName = "knn"),
-        menuSubItem("Tree",tabName = "Arbre de décision")
+        prettyRadioButtons(inputId = "type_pred",label = "Choix du modèle de prédiction:", choices = c("knn","randomforest"),icon = icon("check"), bigger = FALSE,status = "info",animation = "jelly")
       )
     )
   ),
@@ -244,10 +244,16 @@ ui <- dashboardPage(
           selectInput("hired", "Etes vous un professionnel?", choices = NULL),
           actionBttn(inputId = "run5",label = "run", style = "unite",size = "md",color = "royal")
         ),
-        mainPanel(
-          h1("Prédictions Python:"),
-          verbatimTextOutput("predknn")
-        )
+       mainPanel(
+  column(width = 6,
+    h1("Prédictions Python:"),
+    verbatimTextOutput("predknnP")
+  ),
+  column(width = 6,
+    h1("Prédictions Julia:"),
+    verbatimTextOutput("predknnJ")
+  )
+)
       )
 
     )
@@ -473,15 +479,22 @@ guide5$init()
 
 
  #################################PARTIE PREDICTIONS PYTHON#########################
- predict_knn <- eventReactive(input$run5,{
+ predict_knnP <- eventReactive(input$run5,{
     ind <- c(input$peak,input$season,input$citizenship,input$role,input$year,0,input$age,0,0,1,0,0)
     predict <- KNN_Process(data,ind,target)
     paste("Vous avez ",round(predict[[2]][2]*100,0),"% de chances de réussir")
  })
+ predict_knnJ <- eventReactive(input$run5,{
+    #mettre code julia et affichage
+ })
 
-  output$predknn <- renderPrint({
-    #predict_knn()
-    "hello"
+  output$predknnP <- renderPrint({
+    #predict_knnP()
+    "Ici le resultat  python"
+  })
+  output$predknnJ <-renderPrint({
+    #predict_knnJ()
+    "Ici le resultat Julia"
   })
  
 
