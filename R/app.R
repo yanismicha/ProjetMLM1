@@ -79,7 +79,7 @@ ui <- dashboardPage(
         icon = icon("check"), bigger = FALSE,status = "info",animation = "jelly")
       ),
       menuItem("Predictions", tabName = "predictions",startExpanded = FALSE, menuName = "Predictions",
-        menuSubItem("KNN",tabName = "knn"),
+        menuSubItem("Prédictions expédition",tabName = "predExp"),
         prettyRadioButtons(inputId = "type_pred",label = "Choix du modèle de prédiction:", choices = c("knn","randomforest"),icon = icon("check"), bigger = FALSE,status = "info",animation = "jelly")
       )
     )
@@ -228,7 +228,7 @@ ui <- dashboardPage(
           )
         )
       ),
-      tabItem(tabName = "knn",
+      tabItem(tabName = "predExp",
          sidebarPanel(
           actionBttn(inputId = "guide5",label = "Guide", style = "stretch",color = "primary"),
           h2("Dites m'en plus sur vous:",id="title3"), 
@@ -247,11 +247,14 @@ ui <- dashboardPage(
        mainPanel(
   column(width = 6,
     h1("Prédictions Python:"),
-    verbatimTextOutput("predknnP")
+    verbatimTextOutput("predknnP"),
+    progressBar(id = "pb1", value = 0, total = 100, status = "info", display_pct = TRUE, striped = FALSE, title = "Pourcentage de succès:")
   ),
   column(width = 6,
     h1("Prédictions Julia:"),
-    verbatimTextOutput("predknnJ")
+    verbatimTextOutput("predknnJ"),
+    progressBar(id = "pb2", value = 0, total = 100, status = "info", display_pct = TRUE, striped = FALSE, title = "Pourcentage de succès:")
+
   )
 )
       )
@@ -499,6 +502,7 @@ guide5$init()
     ind <- c(input$peak,input$season,input$citizenship,input$role,input$year,0,input$age,0,0,1,0,0)
     predict <- KNN_Process(data,ind,target)
     paste("Vous avez ",round(predict[[2]][2]*100,0),"% de chances de réussir")
+    updateProgressBar(session = session, id = "pb1", value = 50,total=100)#round(predict[[2]][2]*100,0), total = 100)
  })
  predict_knnJ <- eventReactive(input$run5,{
     #mettre code julia et affichage
