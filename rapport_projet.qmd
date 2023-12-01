@@ -1,0 +1,269 @@
+---
+title: "Rapport Projet"
+author: "Yanis Micha"
+format:
+ html:
+    toc: true
+    toc-expand: 1
+    toc-depth: 3
+    toc-location: 'left'
+    toc-title: 'Sommaire'
+    number-sections: true
+    highlight-style: pygments
+---
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+knitr::opts_chunk$set(eval=TRUE,message = FALSE,warning = FALSE)
+
+library(kableExtra)
+library(compar)
+```
+
+# Contexte du projet 
+Ce projet est réalisé dans le cadre de deux UE tout deux dirigés par Remi Drouilhet: l'UE "Logiciels spécialisés R" ainsi que l'UE "Outils de présentation et de recherche reproductible".  
+Le projet en lui même concernant surtout le premier UE et le deuxième UE porté plus sur ce rapport mais également la présentation quarto qui est apporté en supplément.  
+Ce projet a été réalisé par Robin Chaussemy et Yanis Micha.
+Il a été dans un premier temps été réalisé en commun, puis chaqu'un à réalisé une partie bien distincte qui, mis à bout à bout permettent le rendu final de ce projet, mais qui, prise individuellement, peuve également se suffire à elle même.  
+Ce projet est donc constitué de quatre principales parties:  
+
+- La recherche du projet en lui même.
+- L'analyse et le traitement des données choisies
+- La réalisation d'une interface et des composantes/fonctionnalités qui lui incombe.
+- la réalisation d'un apprentissage automatique sur le jeu de données.  
+
+(premiere predicition sur mort puis succes ,expliquer pourquoi,...)
+
+# Choix du projet
+## Theme
+## Choix du jeu de données
+## Problématique
+## Choix des langages
+# Analyse et traitement des données
+## Traitement des données
+### Gestion des données manquantes
+### Agrégations des données
+Tout ce qui est remodeler des variables pour réduire les modalités.  
+
+### Création/suppression de variable
+## Analyse statistique des données
+### Julia
+### R
+# Apprentissage automatique
+## Python
+## Julia
+# Interface Shiny
+## Objectif de l'interface
+La création de l'interface avait pour première mission d'implémenter l'apprentissage automatique réalisé sur notre jeu de données. Ceci pour permettre à un utilisateur lambda de pouvoir jouer en prédisant le succès ou non de sa potentielle expédition Himalayenne suivant moultes conditions.  
+L'idée principale était donc de pouvoir proposer à un non initié du Machine Learning une approche ludique de cette discipline en donnant une approximation somme toute relative de ses chances de réussite s'il venait à se lancer dans une expédition.  
+Notre jeu de données n'étant pas réellement pertinent pour permettre une prédiction digne de ce nom, cela nous paraissait tout de même intéressant de mettre en place cette idée.  
+Afin d'aller plus loin et de proposer également une expérience plus statistique, j'ai eu l'idée de dédié tout une partie de l'interface à l'analyse statistique et à la comparaison de graphiques.  
+Les graphiques sont des outils formidables permettant de visualiser les données et les "faire parler".Avec le temps et les différentes versions de R, de nombreux packages permettant la visualisation ont fait leurs apparitions, avec des graphiques plus jolis (bien que subjectif), plus lisibles, avec plus de fonctionnalités et toujours plus d'options. Cependant, tout ces nouveaux packages ont leurs grammaires bien à eux et il demande d'y consacrer un minimum de temps. Il est également pas toujours chose aisé de choisir le graphique qui nous convienne le mieux suivant ce que l'on recherche: d'un graphique efficace qui va à l'essentielle à un graphique bourré d'options jusqu'à en perdre la vue.  
+Mon idée est donc la suivante: et si, par le biais d'une interface, nous pourrions comparer plusieurs graphiques de différents packages avec seulement quelques cliques?
+C'est donc ce que je me suis efforcer d'essayer de faire.  
+Lorsque je parle des graphiques dans de nombreux packages, en plus de ceux implantés sur le package `base` sur R, on retrouve sur R surtout deux principaux packages (avec de nombreux packages subsidiaires et parfois complémentaires):  
+
+- `ggplot2`
+- `ploly` 
+
+Bien que `plotly` est implanté à partir de `ggplot2`, je les distinguerais tout le long de ce projet, étant donné que de nombreuses options sont possibles sur `ggplot2` et pas sur `plotly` et vice-versa.  
+
+## Choix des graphiques
+Pour tenter de comparer ces 3 packages (`base`,`ggplot2`,`plotly`), j'ai d'abord décidé de faire une liste de graphiques types qui me semble particulièrement utile et "indispensable" pour une bonne analyse. Cette liste, bien entendu non exhaustive a été confectionné selon trois catégories:  
+
+- **Graphiques quantitatifs**: permettre de visualiser des données selon des variables quantitatives.
+- **Graphiques qualitifs**: permettre de visualiser des données selon des variables qualitatives.
+- **Graphique quantitatif/qualitatifs**: permettre de visualiser des données quantitatives/qualitatives, en fonction de données qualitatives.  
+
+J'ai ensuite crée un fichier `comparaison_graphiques.r` dans lequel je choisis plusieurs graphiques par catégories qui me semblent les plus pertinents pour une analyse de donnée standart. Dans ce fichier je regroupe par graphique les possibilités de chaque package.  
+Voici la liste des graphiques retenus:  
+
+### Graphique quantitatif
+#### Histogramme
+**Objectif**: Visualiser la distribution des valeurs d'une variable quantitative en regroupant les données en intervalles (bins).  
+**Avantages** : Donne une idée de la forme de la distribution, des tendances centrales et de la dispersion.  
+Permet également à l'utilisateur de pouvoir choisir le nombre de bins.  
+**Inconvénients** : Sensible au choix des bins, peut être difficile à interpréter si le nombre de bins est mal choisi.  
+
+L'intérêt de l'histogramme sera donc de pouvoir explorer la forme globale de la distribution.  
+
+#### Courbe de densité
+**Objectif** : Estimer la densité de probabilité de la distribution des données continues.  
+**Avantages** : Lisse la distribution, facilite la visualisation des modes et des tendances.  
+**Inconvénients** : Dépend du choix de la méthode d'estimation de la densité (il me semble que d'un package à l'autre il s'agit des mêmes estimations donc pas de réel différence entre eux sur ce point).  
+L'intérêt de la courbe de densité sera donc d'obtenir une représentation plus lisse de la distribution que celle de l'histogramme.  
+
+#### Scatterplot
+**Objectif** : Examiner la relation entre deux variables quantitatives.  
+**Avantages** : Permet de visualiser la dispersion des points et les relations entre les variables.  
+**Inconvénients** : Peut être difficile à interpréter avec un grand nombre de points, ne montre pas toujours la densité des points (d'où l'intérêt de méthodes un peu différentes et plus pertinentes utilisés pour `ggplot2`et `plotly`.
+L'intérêt du scatterplot sera donc surtout de pouvoir explorer la relation entre deux variables quantitatives.  
+La possibilité de visualiser ces données en les discriminant par rapport à une variable indicatrice est également prise en compte car très utile dans l'analyse de données.  
+
+#### boxplot
+**Objectif** : Résumer la distribution des valeurs en mettant en évidence les mesures de position (médiane, quartiles) et les valeurs aberrantes.  
+**Avantages** : Donne une vue rapide des mesures de dispersion, identifie les valeurs aberrantes.  
+**Inconvénients** : Ne montre pas la forme détaillée de la distribution, peut ne pas être aussi informatif avec des distributions asymétriques .  
+L'intérêt du boxplot sera donc de résumer la distribution et identifier les valeurs aberrantes. Dans le cas d'une distribution asymétrique, nous pouvons tout à fait procéder à un regroupement des données par intervalles (et donc avoir un résumé de la distribution et des valeurs aberrantes par intervalles).  
+
+### Graphiques qualitatifs
+#### barplot
+**Objectif** : Visualiser la distribution des catégories d'une variable qualitative en utilisant des barres.  
+**Avantages** : Facile à interpréter, montre la fréquence ou la proportion de chaque catégorie.  
+**Inconvénients** : Peut être moins informatif pour de nombreuses catégories.C'est là que la selection de modalités entre en jeu: une séléction des modalités directement intégré dans le graphique comme c'est le cas pour `plotly` est un vrai plus dans ce cas. Un tri (croissant ou décroissant) des barres peut également permettre une meilleure visibilité du graphique.   
+L'intérêt du barplot sera donc de montrer la fréquence ou la proportion de chaque catégorie d'une variable catégorielle.  
+
+#### mosaicplot
+**Objectif** : Représenter graphiquement les relations entre deux variables catégorielles en utilisant des zones rectangulaires proportionnelles aux fréquences.  
+**Avantages** : Montre les relations jointes entre deux variables catégorielles.  
+**Inconvénients** : Peut être complexe avec de nombreuses catégories et parfois illisible.  
+
+### Graphiques quantitatifs/qualitatifs
+#### Courbe de densité
+**Objectif**: regarder ici la densité d'une partie de notre jeu de données.    
+**Exemple**: Nous souhaitons voir si la densité de l'âge d'une personne en fonction du sexe suit une loi normale, nous allons donc représenter deux densités de la variable `age`: une pour les hommes et une pour les femmes.  
+
+#### barplot
+**Objectif**: analyser une variable qualitative ou quantitative, en fonction d'une autre variable qualitative.  
+L'intérêt sera donc de pouvoir visualiser sur une valeur précise de la première variable, quels sont les modalités les plus présentes de la deuxième variable.    
+**Exemple**: je regarde la catégorie professionnelle d'une personne.  Je voudrais savoir quelle est la proportion d'hommes et de femmes pour chaque catégories.  
+
+#### boxplot
+**Objectif**: représenter un résumé de la distribution et des valeurs aberrantes en fonction des modalités d'une variable catégorielle.  
+**Exemple**: Je souhaite savoir si la distribution de la taille d'une personne est semblable entre un homme et une femme.  
+
+#### Scatterplot
+**Objectif**: visualiser une relation entre deux variables quantitatives sur une partie de la population.  
+**Exemple**: Je souhaite regarder la relation entre la taille et le poids chez les Americains et comparer cette relation taille/poids avec celle chez les Français.  
+
+
+
+## Résumés statistiques
+En plus de cette comparaison des graphique, j'ai souhaité ajouter une simple visualisation des résumés statistiques pour permettre à l'utilisateur moyen d'avoir un premier aperçu de ses données.  
+
+### Variable quantitative
+En plus d'un simple résumé statistique de la variable, je propose à l'utilisateur de pouvoir discriminer cette dernière en fonction des modalités d'une variable catégorielle.  
+**Exemple**: Je souhaite voir les différents estimateurs statistiques (moyennes, médianes,...) de l'âge des personnes travaillant dans le domaine de la santé.  
+
+### Variable qualitative
+En plus des effectifs et de la fréquence de chaque modalité de la variable,j'ajoute les frequences cumulées (utile surtout pour les variables catégorielles ordinales).  
+
+
+## Workflow de l'interface
+La disposition des éléments, les différentes fonctionnalités,etc... 
+Comme toute personne qui apprend une nouvelle notion informatique (ici la réalisation d'une interface shiny), j'ai procédé par essai-erreur. L'avantage de ce procédé est qu'il m'a permis d'en apprendre énormément sur la réalisation d'une interface shiny. Cela m'a permis de découvrir pleins de packages utiles, que ce soit des packages inhérent à la modélisation de l'interface, à son design et bien entendu à l'analyse de données.  
+En revanche, ce procédé fait qu'aujourd'hui mon interface est largement perfectible, surtout en ce qui concerne le placement des objets shiny et les possibles interactions entre eux. Pour permettre une meilleure modélisation de mes interfaces dans le futur, je procèderais en amont à un worflow de mon interface (ce que je fais déja avec un autre projet).  
+
+### Structure de l'interface shiny
+L'interface se décompose en 3 principales parties:  
+
+- DATA
+- Analyse
+- Prédictions  
+
+#### DATA
+Dans cette partie, nous y retrouvons deux onglets, l'onglet permettant de visualiser le jeu de donnés en format assez classique, et un autre onglet inhérent aux résumés statistiques.  Pour ce dernier onglet, il reste pour le moment très minimaliste et fera l'objet d'améliorations (voir les axes d'améliorations en dernière partie).  
+Pour ce qui est du jeu de données, j'ai fait le choix d'utiliser le package `reactable` pour permettre de nombreuses personnalisations sur ce dernier.  
+`reactable` est un package permettant la création de tableaux interactifs. Les options qui ont étés retenus sont les suivantes:  
+
+- la recherche d'informations par variables: `searchable=TRUE`.  
+Pour chaque colonne dont l'option est activé, une case de recherche est mise à disposition.  
+**Exemple**: Je soutaite seuelemnt regarder les expeditions himalayennes faites par les français, je cherche `france`dans la colonne `citizenship`.  
+- le tri du jeu de données: `filterable=TRUE`.  
+Permet de trier par ordre croissant ou décroissant le jeu de donnnée par rapport à la colonne spécifié.  
+**Exemple**: je cherche à trié les expéditions himalayennes par âges croissant des grimpeurs pour regarder les expeditions des plus jeunes.
+- le design des cases: changer la couleur, la forme, le style d'une colonne en fonction de ses modalités.  
+**Exemple**: Pour permettre une meilleure visualisation de notre variable cible `success`, changer la couleur en fonction de la réussite ou non (<span style="color:green;">vert</span> pour TRUE, <span style="color:red;">**rouge**</span> pour FALSE).  
+
+#### Analyse
+Trois onglets sont disponible à l'intérieur de celui-ci.  
+Ces trois onglets corresponds à la distinction des graphiques en trois catégories faites auparavant: graphiques quantitatives, graphiques qualitatifs et graphiques quantiatifs/qualitatifs.  
+Dans le menu de l'onglet `Analyse` se trouve des boutons radios `prettyRadioButtons` permettant de choisir le package utilisé pour faire le graphique: classique (pour `base`), ggplot et plotly.  
+Chaque onglet est disposé de la même manière: une partie `sidebarpanel`dans lequel l'utilisateur choisis le graphique qu'il souhaite tracer, les variables qu'il souhaite visualiser et quelques options supplémentaires (des `slider` pour changer les intervalles de certains graphiques,des variables à discriminer, etc.). Afin d'éviter un rafraichissement du graphique à chaque modification, et pour permettre à l'utilisateur de prendre son temps pour choisir toute ses options de graphiques, un boutton d'execution est mis à disposition. Pour tracer le graphique, il suffit d'appuyer sur ce boutton. Il suffit de switch entre les différents packages de graphique pour pouvoir les comparer. L'autre partie de l'onglet `mainpanel`étant dédié à l'affichage du graphique.  
+
+#### Prédictions
+Cet unique onglet contient le travail d'apprentissage supervisé réalisé sur notre jeu de données. Comme indiqué ci-dessus,notre objectif était de permettre à un utilisateur lambda de pouvoir prédire le succès de sa potentielle expédition himalayenne.  
+Pour cela,l'onglet est constitué d'un `sidebarpanel` dans lequel
+est posé plusieurs questions à l'utilisateur: son âge,sa nationalité, s'il souhaite grimper tout seul ou accompagné,ect.  
+Ces questions sont en fait relatifs aux différentes variables qui nous ont permis de procéder à l'apprentissage de notre jeu de données, afin de prédire le taux de succès d'une expédition en particulière.  
+Dans le `mainpanel` se constitue deux parties, une donnant les résultats provenant de l'apprentissage réalisé sur python et une autre sur Julia. Cela pour permettre de comparer l'apprentissage des modèles choisis sur les deux langages.  
+Enfin, il est également possible dans le menu de changer de modèle d'apprentissage en passant du modèle KNN à celui de randomforest.  
+
+#### Guide
+Afin de permettre à un n'importe qui de comprendre le fonctionnement de chaque onglet, un guide interactif a été ajouté à l'aide du package `cicerone`.  
+Ce package permet à l'aide d'un script r de préciser les emplacements de chaque input de l'interface, afin de guider au mieux l'utilisateur.  
+**Exemple**:  
+![Guide](Rapport_projet_files/guide.png)
+![Guide](Rapport_projet_files/guide2.png)
+
+
+
+## Création de packages
+Pour permettre de rendre plus aisé la compréhension du code de mon application shiny, j'ai crée deux packages:  
+
+- *scindeR*
+- *compaR*  
+
+### scindeR
+Ce package très simpliste permet de scinder une data selon les types de variables.  
+La fonction scinde(data) permet de récupérer les noms de variables selon le type de variable.  
+**Exemple**:  
+```{r}
+data("Orange")
+scindeR::scinde(Orange)
+```
+On peut également préciser le type de variable que l'on souhaite récupérer, pour récupérer un subdata seulement de ce type.  
+**Exemple**
+```{r}
+kable(head(scindeR::scinde(Orange,"quanti")))
+```
+
+### compaR
+Ce package réunit l'ensemble des graphiques utilisés pour l'interface shiny.  
+Il est composé d'une part d'une fonction par type de graphique: boxplot,histogramme,...
+D'autre part d'une fonction par catégorie de graphique: quantitatif,qualitatif,quantitatif/qualitatif.  
+Dans chaque fonction est en fait implémenter un graphique pour chaque package que l'on souhaite comparer.  
+**Exemple** avec l'histogramme:  
+```{r}
+histogramme(iris,"Sepal.Length",nbClasses = 6,color="red",type="classique")
+histogramme(iris,"Sepal.Length",nbClasses = 6,color="red",type="ggplot")
+histogramme(iris,"Sepal.Length",nbClasses = 6,color="red",type="plotly")
+```
+
+Chacun de ces graphiques se retrouve implémenter dans une des trois fonctions représentant les catégories.  
+**Exemple** avec le boxplot:
+```{r}
+plot_quanti_quali(plot_type = "boxplot",data = iris,var_quanti1 = "Sepal.Length",var_quali = "Species",type = "ggplot")
+```
+
+
+# Conclusion
+
+## Reflexion sur l'expérience du projet
+## les compétences acquises 
+### Julia
+- Apprentissage du langage
+- Initiation au multiple dispatching
+### R
+- apprentissage de Shiny  et des différentes options
+- découverte de dash: non présenter mais apprentissage des bases.
+- Prise en main poussé des packages ggplot2 et plotly
+- Initiation aux packages permettant d'utliser d'autres langages tels que Julia et python au sein de R.
+
+## axes d'amélioration du projet
+### Analyse et traitement de données
+- gestion des NA dans notre jeu de données
+### Interface
+le fait de pouvoir récupérer du code du graphique qui  plait à l'utilisateur...  
+Pouvoir discriminer une variable quanti par une autre dans les résumés avec des bins et un slider.  
+
+
+### packages
+Utilisation plus poussé de R, notamment du S3 pour améliorer le package `compaR`.  
+
+### Machine Learning
+Ajouter une comparaison avec l'aprentissage supervisé implémenté dans R avec le package `tidyerse`.  
+Permettre d'automatiser le machine learning dans l'inerface pour n'importe quel jeu de données en laissant à l'utilisateur le choix du jeu de données ainsi que la *target* à prédire.  
+  
+  
+## Conclusion générale
+
+
