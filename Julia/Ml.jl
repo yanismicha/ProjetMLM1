@@ -48,6 +48,8 @@ dataCleanExp=data[!,[2,3,5,6,20,21,26,27,29,30,36,38,46,49,50,52,57]]
 dropmissing!(dataCleanExp,:members)
 CSV.write("ProjetsLogSpe/DataSets/expeditionsClean.csv",dataCleanExp)
 
+###########Changement de jeu de données################
+
 using CSV,Downloads,DataFrames
 dt=CSV.File(Downloads.download("https://www.dropbox.com/scl/fi/cpvcr9svg72vg921xc4ih/members.csv?rlkey=kf76mywll5rfp860rhrmass93&dl=0")) |> DataFrame
 using Statistics

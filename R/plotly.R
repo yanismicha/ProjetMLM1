@@ -16,6 +16,7 @@ plot
 plot <- plot_ly(data, x = ~x1, type = "histogram", histnorm = "probability", color = ~y) 
 plot
 #densite 
+densite <- density(x1)
 densite_plot <- plot_ly(x = densite$x, y = densite$y, type = "scatter", mode = "lines", line = list(shape = "linear",color="red"))
 densite_plot
 

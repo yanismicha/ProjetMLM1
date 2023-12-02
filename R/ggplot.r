@@ -6,6 +6,8 @@ library(patchwork)
 dt <- read.csv("DataSets/membersClean.csv")
 head(dt)
 dim(dt)
+x1 <- data$age
+y <- data$season
 
 ####GRAPHIQUES QUANTITATIFS###
 #classique plot
@@ -31,6 +33,9 @@ ggplot(dt, aes(x = year, y = age)) +
 ggplot(dt, aes(y = year)) + 
   geom_boxplot(aes(group = cut_interval(age, 4)),varwidth = TRUE)
 #varwidth = TRUE permet d'ajuster la taille de chaque boxplot en proportions
+x1cut <- cut(x1,6)
+plot <- plot_ly(y = ~x1, type = "box", x = x1cut, width = 0.6,boxpoints="outliers")
+layout(plot,xaxis = list(title = x1cut),yaxis = list(title = "age"))
 
 
 ##faire un graphique 2 variables quantitatifs en visualisant selon les modalités d'une qualitative
@@ -73,12 +78,19 @@ p5 <- ggplot(dt, aes(x = year, y = age)) +
 
 
 ##faire un histogramme##
+nbClasses <- 4
   p1 <- ggplot(dt, aes(x = age)) +
-  geom_histogram(binwidth = 2)
+  geom_histogram(binwidth = nbClasses)
+  
+plot <- plot_ly(data, x = ~age, type = "histogram", xbins = list(size = (max(data$age) - min(data$age)) / nbClasses),marker=list(color = "grey"))
+plot
 
 ##faire une densité##
 p2 <-ggplot(dt, aes(x = age)) +
   geom_density()
+densite <- density(x1)
+densite_plot <- plot_ly(x = densite$x, y = densite$y, type = "scatter", mode = "lines", line = list(shape = "linear",color="red"))
+densite_plot
 
 ##faire un boxplot##
 p3 <-ggplot(dt, aes(x = age))+
@@ -115,6 +127,16 @@ ggplot(dt, aes(x = year, y = age)) +
 ##barplot ##
 ggplot(dt, aes(x = peak_name, fill = peak_name)) + 
   geom_bar() #on peut utiliser color à la place de fill
+plot <- plot_ly(data, x = ~peak_name, type = "histogram",color=~peak_name)
+plot
+##plotly trié##
+category_counts <- table(data$peak_name)
+
+sorted_categories <- names(sort(category_counts))
+
+sort_peak_name <- factor(data$peak_name, levels = sorted_categories)
+plot <- plot_ly(x=sort_peak_name, type = "histogram", color = sort_peak_name)
+plot
 
 barsTriees <- function(df, var) {
   df |> 
@@ -125,6 +147,7 @@ barsTriees <- function(df, var) {
 
 
 dt |> barsTriees(citizenship)
+
 
 ##pour changer le nom de y#
 dt |>
@@ -187,11 +210,16 @@ ggplotmosaic <- function(df,var1,var2){
 ggplot(dt, aes(x = age,y = after_stat(density))) + 
   geom_freqpoly(aes(color = expedition_role))
 
+  plot <- plot_ly(data, x = ~peak_name, type = "histogram",color=~sex) 
+plot %>% layout(barmode= "stack",xaxis=list(title="peak_name")) 
+
 
 ##box plot (plus facile à interpréter)##
 ggplot(dt, aes(x = age , y = fct_reorder(peak_name, age, median), color = peak_name)) +
   geom_boxplot() #fct_reorder permet d'ordonner les boxplot ,ici en fonctiond de la médiane
 #pour passer à l'horizontal, suffit d'inverser nos x et y!!
+plot <- plot_ly(data, y = ~x1, type = "box")
+layout(plot, yaxis = list(title = "age"))
 
 
 ##placer des graphiques côtes à côtes
