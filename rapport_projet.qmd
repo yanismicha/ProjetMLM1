@@ -2,7 +2,7 @@
 title: "Rapport Projet"
 author: "Yanis Micha"
 format:
- html:
+ bookup-html+dark:
     toc: true
     toc-expand: 1
     toc-depth: 3
@@ -16,6 +16,7 @@ knitr::opts_chunk$set(eval=TRUE,message = FALSE,warning = FALSE)
 
 library(kableExtra)
 library(compar)
+library(reactable)
 ```
 
 # Contexte du projet 
@@ -35,15 +36,72 @@ Ce projet est donc constitué de quatre principales parties:
 # Choix du projet
 ## Theme
 ## Choix du jeu de données
+Il n'existe pas de nombreux jeu de données concernant les expéditions himalayennes, et les jeux de données existants se recoupent entre eux et leurs différences ne sont pas significatives.  
+Nous avons d'abord choisi un jeu de données plus porté sur les morts lors des expéditions et leurs causes afin de pouvoir prédire cette dernière. En plus de ne pas être très joyeux, la proportion de mort parmi les expéditions himalayennes étant très faibles et avec des variables ne l'expliquant pas très bien, on s'est très vite rendu compte que cette apprentissage supervisé ne serait pas très pertinent. Nous nous sommes donc rabattus sur un autre jeu de données dont une variable nous intéressait plus pour de la prédiction: `success`,une variable indiquant le succès de l'expédition ou non du grimpeur.  
+Notre jeu de données `expeditions` est un format csv contenant 76519 individus et 21 variables.  
+Le jeu de données n'est pas du tout propre pour permettre une analyse poussée des données ainsi qu'un apprentissage supervisé. Une grande partie du travail à donc été de le nettoyer.[Traitement des données](#traitement-des-données)  
+
 ## Problématique
 ## Choix des langages
 # Analyse et traitement des données
+```{r,cache=TRUE,echo=FALSE}
+data <- read.csv("https://www.dropbox.com/scl/fi/d3v41yp6x9cxlqvueoet3/membersClean.csv?rlkey=v9xfdgu6oyubjur9rlu6k9eow&dl=1")
+```
+```{r,cache=TRUE,echo=FALSE}
+style_success <- function(value) {
+      if (value) {
+        list(color = "darkgreen")
+      } 
+      else {
+        list(color = "darkred")
+      }
+}
+theme_dark <- reactableTheme(
+      color = "hsl(233, 9%, 87%)",
+      backgroundColor = "hsl(233, 9%, 19%)",
+      borderColor = "hsl(233, 9%, 22%)",
+      stripedColor = "hsl(233, 12%, 22%)",
+      highlightColor = "hsl(233, 12%, 24%)",
+      inputStyle = list(backgroundColor = "hsl(233, 9%, 25%)"),
+      selectStyle = list(backgroundColor = "hsl(233, 9%, 25%)"),
+      pageButtonHoverStyle = list(backgroundColor = "hsl(233, 9%, 25%)"),
+      pageButtonActiveStyle = list(backgroundColor = "hsl(233, 9%, 28%)"))
+
+reactable(data[sample(1:73000,50),],
+        columns = list(success = colDef(align = "center", style = style_success 
+        ,filterable = FALSE)),fullWidth = TRUE,defaultColDef = colDef(style = "font-style: italic;"),searchable = TRUE,
+        filterable = TRUE,highlight = TRUE, showPageSizeOptions = TRUE,defaultPageSize = 10,pageSizeOptions = c(10, 50, 100),theme = theme_dark)
+```
+
+
 ## Traitement des données
 ### Gestion des données manquantes
+Notre jeu de données comporte de nombreuse données manquantes principalement dans la variable `age`. L'âge d'un grimpeur étant une donnée qui nous est capitale pour prédire le succès, nous avons préféré évincer tout simplement toute ces données manquantes.  
+A la suite de cette suppression de données, notre jeu de données 
+comporte 73000 individus.  
+
 ### Agrégations des données
+**peak_name**:  
+Le nombre de modalités de cette variable était de 391! En plus d'avoir un nombre de sommets très important, l'hymalaya est une chaine de montagne connu pour avoir de multiples arrêtes démultipliant ce nombre de sommets. Les modalité de notre variable étant alors constitué de toute ces arêtes.  
+*Exemple*: Annapurna étant un sommet constitué de 4 arêtes:  
+
+- Annapurna
+- Annapurna I Middle
+- Annapurna II
+- Annapurna III  
+
+Nous avons donc agréger toute ces arêtes en un seul sommet permettant de diminuer drastiquement le nombre de modalités.  
+Pour simplifier l'analyse, nous avons ensuite décider de ne garder que les 13 sommets avec le plus d'expéditions et de ranger tout les autres dans une nouvelle modalité: `autres`.  
+Notre variable ne comportant donc plus que 14 modalités.  
+
+**citizenship**:  
+
+
 Tout ce qui est remodeler des variables pour réduire les modalités.  
 
 ### Création/suppression de variable
+La variable age était en format String, nous l'avons donc naturellement transformé en un format int.  
+
 ## Analyse statistique des données
 ### Julia
 ### R
@@ -166,12 +224,13 @@ Pour ce qui est du jeu de données, j'ai fait le choix d'utiliser le package `re
 
 - la recherche d'informations par variables: `searchable=TRUE`.  
 Pour chaque colonne dont l'option est activé, une case de recherche est mise à disposition.  
-**Exemple**: Je soutaite seuelemnt regarder les expeditions himalayennes faites par les français, je cherche `france`dans la colonne `citizenship`.  
+**Exemple**: Je souhaite seulement regarder les expeditions himalayennes faites par les français, je cherche `france`dans la colonne `citizenship`.  
 - le tri du jeu de données: `filterable=TRUE`.  
-Permet de trier par ordre croissant ou décroissant le jeu de donnnée par rapport à la colonne spécifié.  
+Permet de trier par ordre croissant ou décroissant le jeu de donnnée par rapport à la colonne spécifiée.  
 **Exemple**: je cherche à trié les expéditions himalayennes par âges croissant des grimpeurs pour regarder les expeditions des plus jeunes.
 - le design des cases: changer la couleur, la forme, le style d'une colonne en fonction de ses modalités.  
 **Exemple**: Pour permettre une meilleure visualisation de notre variable cible `success`, changer la couleur en fonction de la réussite ou non (<span style="color:green;">vert</span> pour TRUE, <span style="color:red;">**rouge**</span> pour FALSE).  
+D'autres options ont étés utilisés surtout dans un objectif d'esthétique mais cela ralentissait grandement le chargement du jeu de données lors du lancement de l'interface ce qui n'est pas très agréable. Pour contrer ça il faudrait faire cette mise en forme seulement pour les données affichées et non pour le dataset entier.  
 
 #### Analyse
 Trois onglets sont disponible à l'intérieur de celui-ci.  
@@ -191,7 +250,9 @@ Enfin, il est également possible dans le menu de changer de modèle d'apprentis
 Afin de permettre à un n'importe qui de comprendre le fonctionnement de chaque onglet, un guide interactif a été ajouté à l'aide du package `cicerone`.  
 Ce package permet à l'aide d'un script r de préciser les emplacements de chaque input de l'interface, afin de guider au mieux l'utilisateur.  
 **Exemple**:  
-![Guide](Rapport_projet_files/guide.png)
+![Guide](Rapport_projet_files/guide.png)  
+  
+
 ![Guide](Rapport_projet_files/guide2.png)
 
 
@@ -221,18 +282,32 @@ Ce package réunit l'ensemble des graphiques utilisés pour l'interface shiny.
 Il est composé d'une part d'une fonction par type de graphique: boxplot,histogramme,...
 D'autre part d'une fonction par catégorie de graphique: quantitatif,qualitatif,quantitatif/qualitatif.  
 Dans chaque fonction est en fait implémenter un graphique pour chaque package que l'on souhaite comparer.  
-**Exemple** avec l'histogramme:  
-```{r}
+**Exemple** avec l'histogramme: 
+<details>
+<summary>Voir le code</summary>
+```{r,eval=FALSE}
 histogramme(iris,"Sepal.Length",nbClasses = 6,color="red",type="classique")
 histogramme(iris,"Sepal.Length",nbClasses = 6,color="red",type="ggplot")
 histogramme(iris,"Sepal.Length",nbClasses = 6,color="red",type="plotly")
 ```
-
+</details>
+```{r,echo=FALSE}
+histogramme(iris,"Sepal.Length",nbClasses = 6,color="red",type="classique")
+histogramme(iris,"Sepal.Length",nbClasses = 6,color="red",type="ggplot")
+histogramme(iris,"Sepal.Length",nbClasses = 6,color="red",type="plotly")
+```
 Chacun de ces graphiques se retrouve implémenter dans une des trois fonctions représentant les catégories.  
 **Exemple** avec le boxplot:
-```{r}
+<details>
+<summary>Voir le code</summary>
+```{r,eval=FALSE}
 plot_quanti_quali(plot_type = "boxplot",data = iris,var_quanti1 = "Sepal.Length",var_quali = "Species",type = "ggplot")
 ```
+</details>
+```{r,echo=FALSE}
+plot_quanti_quali(plot_type = "boxplot",data = iris,var_quanti1 = "Sepal.Length",var_quali = "Species",type = "ggplot")
+```
+
 
 
 # Conclusion
@@ -241,7 +316,8 @@ plot_quanti_quali(plot_type = "boxplot",data = iris,var_quanti1 = "Sepal.Length"
 ## les compétences acquises 
 ### Julia
 - Apprentissage du langage
-- Initiation au multiple dispatching
+- Initiation au multiple dispatching  
+
 ### R
 - apprentissage de Shiny  et des différentes options
 - découverte de dash: non présenter mais apprentissage des bases.
@@ -250,20 +326,35 @@ plot_quanti_quali(plot_type = "boxplot",data = iris,var_quanti1 = "Sepal.Length"
 
 ## axes d'amélioration du projet
 ### Analyse et traitement de données
-- gestion des NA dans notre jeu de données
+- gestion des NA dans notre jeu de données  
+
 ### Interface
 le fait de pouvoir récupérer du code du graphique qui  plait à l'utilisateur...  
 Pouvoir discriminer une variable quanti par une autre dans les résumés avec des bins et un slider.  
+Ajouter la possibilité de rajouter/supprimer une ligne dans la data directement depuis l'interface.  
 
 
 ### packages
 Utilisation plus poussé de R, notamment du S3 pour améliorer le package `compaR`.  
+Creation de packages julia pour une amélioration du traitement de données.  
+
 
 ### Machine Learning
-Ajouter une comparaison avec l'aprentissage supervisé implémenté dans R avec le package `tidyerse`.  
+Ajouter une comparaison avec l'aprentissage supervisé implémenté dans R avec le package `tidyverse`.  
+Ajouter des modèles d'apprentissages.  
 Permettre d'automatiser le machine learning dans l'inerface pour n'importe quel jeu de données en laissant à l'utilisateur le choix du jeu de données ainsi que la *target* à prédire.  
+
   
   
 ## Conclusion générale
+Ce projet aura été d'une utilité formidable pour progresser, autant dans l'apprentissage de certains packages:
+
+- `ggplot2`,`plotly` et de leurs grammaire pour ce qui est de la visualisation statistique.
+- `shiny` pour ce qui est de la création d'interface
+- `quarto`pour la création de rapport statistiques et de la présentation.
+- les packages permettant d'appeler du code Julia et Python au sein du language R.  
+
+Mais également dans l'apprentissage d'un nouveau language `Julia` et de ses fonctionnalités.  
+Il a permis également de progresser en Machine Learning...
 
 
