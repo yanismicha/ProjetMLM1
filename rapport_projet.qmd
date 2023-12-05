@@ -17,6 +17,9 @@ knitr::opts_chunk$set(eval=TRUE,message = FALSE,warning = FALSE)
 library(kableExtra)
 library(compar)
 library(reactable)
+library(ggplot2)
+library(plotly)
+
 ```
 
 # Contexte du projet 
@@ -35,14 +38,23 @@ Ce projet est donc constitué de quatre principales parties:
 
 # Choix du projet
 ## Theme
+Notre première envie était de travailler avec des données relatives à l'escalade.  
+Après avoir eu l'idée de créer une carte interactive dans laquelle nous listerions tout coins de grimpe avec leurs caractéristique et la possibilité en se plaçant sur une carte de visualiser les endroits les plus proche pour escalader, nous avons préférer partir sur une autre idée: la prédiction sur un jeu de donnée relatif à l'escalade.  
+Après quelques recherche, les jeux de données les plus pertinents et intéressants concernant l'escalade étant le recensement des expéditions himalayennes.  
+
 ## Choix du jeu de données
-Il n'existe pas de nombreux jeu de données concernant les expéditions himalayennes, et les jeux de données existants se recoupent entre eux et leurs différences ne sont pas significatives.  
+Il n'existe pas de nombreux jeux de données concernant les expéditions himalayennes, et les jeux de données existants se recoupent entre eux et leurs différences ne sont pas significatives.  
 Nous avons d'abord choisi un jeu de données plus porté sur les morts lors des expéditions et leurs causes afin de pouvoir prédire cette dernière. En plus de ne pas être très joyeux, la proportion de mort parmi les expéditions himalayennes étant très faibles et avec des variables ne l'expliquant pas très bien, on s'est très vite rendu compte que cette apprentissage supervisé ne serait pas très pertinent. Nous nous sommes donc rabattus sur un autre jeu de données dont une variable nous intéressait plus pour de la prédiction: `success`,une variable indiquant le succès de l'expédition ou non du grimpeur.  
 Notre jeu de données `expeditions` est un format csv contenant 76519 individus et 21 variables.  
 Le jeu de données n'est pas du tout propre pour permettre une analyse poussée des données ainsi qu'un apprentissage supervisé. Une grande partie du travail à donc été de le nettoyer.[Traitement des données](#traitement-des-données)  
 
 ## Problématique
 ## Choix des langages
+Pour nous permettre une initiation au language `Julia`, a été décidé de procéder à l'entièreté du traitement des données (préprocessing) ainsi qu'à leurs analyse.  
+Pour ce qui est de l'interface, `Shiny`à été préféré pour sa facilité d'accès et de déploiement ainsi que sa facilité d'apprentissage pour des personnes initiés au language R contrairement à `dash` ou en encore `genie`.  Cependant, une comparaison d'utilisation de ses différentes possibilités d'interface avec leurs fonctionnalités, avantages et désavantages aurait été envisagé avec plus de temps (et sera bien entendu réalisé de notre côté).  
+Enfin, pour ce qui est du Machine Learning et de l'apprentissage supervisé, nous avons choisi de comparer Python pour lequel le ML nous était déjà familier avec `Sci-kit-learn`, avec  Julia.  
+Notre interface étant une application `shiny`, il nous a fallu pour ça utiliser des packages R permettant d'appeler ces languages au sein de notre application.  
+
 # Analyse et traitement des données
 ```{r,cache=TRUE,echo=FALSE}
 data <- read.csv("https://www.dropbox.com/scl/fi/d3v41yp6x9cxlqvueoet3/membersClean.csv?rlkey=v9xfdgu6oyubjur9rlu6k9eow&dl=1")
@@ -122,7 +134,7 @@ Lorsque je parle des graphiques dans de nombreux packages, en plus de ceux impla
 - `ggplot2`
 - `ploly` 
 
-Bien que `plotly` est implanté à partir de `ggplot2`, je les distinguerais tout le long de ce projet, étant donné que de nombreuses options sont possibles sur `ggplot2` et pas sur `plotly` et vice-versa.  
+Bien que `plotly` est implanté à partir de `ggplot2`, je les distinguerais tout le long de ce projet, étant donné que de nombreuses options sont possibles sur `ggplot2` et pas sur `plotly` et vice-versa.  Bien que `plotly`intègre une fonction permettant d'envelopper un graphique `ggplot` et de le transformer en graphique interactif, cette fonction ne fonctionne que pour une partie des graphiques.  L'implentation de `ggplotly` dans mon interface permettra à l'utilisateur de se rendre compte des avantages et des limites de cette fonction.  
 
 ## Choix des graphiques
 Pour tenter de comparer ces 3 packages (`base`,`ggplot2`,`plotly`), j'ai d'abord décidé de faire une liste de graphiques types qui me semble particulièrement utile et "indispensable" pour une bonne analyse. Cette liste, bien entendu non exhaustive a été confectionné selon trois catégories:  
@@ -284,7 +296,7 @@ D'autre part d'une fonction par catégorie de graphique: quantitatif,qualitatif,
 Dans chaque fonction est en fait implémenter un graphique pour chaque package que l'on souhaite comparer.  
 **Exemple** avec l'histogramme: 
 <details>
-<summary>Voir le code</summary>
+<summary style="font-weight: bold; color: #72afd2;">Voir le code</summary>
 ```{r,eval=FALSE}
 histogramme(iris,"Sepal.Length",nbClasses = 6,color="red",type="classique")
 histogramme(iris,"Sepal.Length",nbClasses = 6,color="red",type="ggplot")
@@ -299,7 +311,7 @@ histogramme(iris,"Sepal.Length",nbClasses = 6,color="red",type="plotly")
 Chacun de ces graphiques se retrouve implémenter dans une des trois fonctions représentant les catégories.  
 **Exemple** avec le boxplot:
 <details>
-<summary>Voir le code</summary>
+<summary style="font-weight: bold; color: #72afd2;">Voir le code</summary>
 ```{r,eval=FALSE}
 plot_quanti_quali(plot_type = "boxplot",data = iris,var_quanti1 = "Sepal.Length",var_quali = "Species",type = "ggplot")
 ```
@@ -329,14 +341,40 @@ plot_quanti_quali(plot_type = "boxplot",data = iris,var_quanti1 = "Sepal.Length"
 - gestion des NA dans notre jeu de données  
 
 ### Interface
-le fait de pouvoir récupérer du code du graphique qui  plait à l'utilisateur...  
-Pouvoir discriminer une variable quanti par une autre dans les résumés avec des bins et un slider.  
-Ajouter la possibilité de rajouter/supprimer une ligne dans la data directement depuis l'interface.  
+
+- Pouvoir récupérer le code du graphique qui  plait à l'utilisateur.    
+Ajouter pour cela un boutton permettant de visualiser le code effectué par le package `compaR`pour afficher le graphique ainsi que le code correspondant dans le package choisis (`base`,`ggplot`, `plotly`).  
+**Exemple**:
+```{r,echo=FALSE}
+plot_quanti_quali(plot_type = "boxplot",data=data,"age",var_quali = "season",type = "ggplot")
+```
+<details>
+<summary style="font-weight: bold; color: #72afd2;">Voir le code</summary>
+```{r,eval=FALSE}
+#code compaR
+plot_quanti_quali(plot_type = "boxplot",data=data,"age",var_quali = "season",type = "ggplot")
+#code ggplot
+ggplot(data,aes(y = age, x = season,color = season))+
+  geom_boxplot()+
+  stat_summary(fun = "mean", geom = "point", shape = 19, size = 1)
+```
+</details>
+- Pouvoir discriminer une variable quanti par une autre dans les résumés avec des bins et un slider.
+- Ajouter la possibilité de rajouter/supprimer une ligne dans la data directement depuis l'interface. - Ajouter graphique interactif avec animation  
+`plotly` permet égalément de visualiser des graphiques avec animations ce qui est particulièrement utile pour les données temporelles mais également pour observer des graphiques par sous-population.  
+**Exemple**:
+```{r,eval=FALSE}
+p <- ggplot(data, aes(x = year, y = age)) + geom_point()
+ggplotly(p + aes(frame = citizenship)) |> animation_opts(frame = 1500, transition = 500)
+```
+
+
 
 
 ### packages
-Utilisation plus poussé de R, notamment du S3 pour améliorer le package `compaR`.  
-Creation de packages julia pour une amélioration du traitement de données.  
+
+- Utilisation plus poussé de R, notamment du S3 pour améliorer le package `compaR`.
+- Creation de packages julia pour une amélioration du traitement de données.  
 
 
 ### Machine Learning
@@ -350,7 +388,7 @@ Permettre d'automatiser le machine learning dans l'inerface pour n'importe quel 
 Ce projet aura été d'une utilité formidable pour progresser, autant dans l'apprentissage de certains packages:
 
 - `ggplot2`,`plotly` et de leurs grammaire pour ce qui est de la visualisation statistique.
-- `shiny` pour ce qui est de la création d'interface
+- `shiny` pour ce qui est de la création d'interface.
 - `quarto`pour la création de rapport statistiques et de la présentation.
 - les packages permettant d'appeler du code Julia et Python au sein du language R.  
 
