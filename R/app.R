@@ -75,7 +75,7 @@ ui <- dashboardPage(
         menuSubItem("Graphique quantitatifs", tabName = "graph_quantitatifs"),
         menuSubItem("Graphique qualitatifs", tabName = "graph_qualitatifs"),
         menuSubItem("Graphique quanti vs quali", tabName = "graph_quanti_quali"),
-        prettyRadioButtons(inputId = "type_graph",label = "Choix du style de graphique:", choices = c("classique","ggplot","plotly"),
+        prettyRadioButtons(inputId = "type_graph",label = "Choix du style de graphique:", choices = c("classique","ggplot","ggplotly","plotly"),
         icon = icon("check"), bigger = FALSE,status = "info",animation = "jelly")
       ),
       menuItem("Predictions", tabName = "predictions",startExpanded = FALSE, menuName = "Predictions",
@@ -163,6 +163,10 @@ ui <- dashboardPage(
             plotOutput("ggplot_quanti")
           ),
           conditionalPanel(
+            condition = "input.type_graph == 'ggplotly'",
+            plotlyOutput("ggplotly_quanti")
+          ),
+          conditionalPanel(
             condition = "input.type_graph == 'plotly'",
             plotlyOutput("plotly_quanti")
           )
@@ -194,6 +198,10 @@ ui <- dashboardPage(
             plotOutput("ggplot_quali")          
           ),
           conditionalPanel(
+            condition = "input.type_graph == 'ggplotly'",
+            plotlyOutput("ggplotly_quali")
+          ),
+          conditionalPanel(
             condition = "input.type_graph == 'plotly'",
             plotlyOutput("plotly_quali")
           )
@@ -221,6 +229,10 @@ ui <- dashboardPage(
           conditionalPanel(
             condition = "input.type_graph == 'ggplot'",
             plotOutput("ggplot_quali_quanti")     
+          ),
+          conditionalPanel(
+            condition = "input.type_graph == 'ggplotly'",
+            plotlyOutput("ggplotly_quali_quanti")
           ),
           conditionalPanel(
             condition = "input.type_graph == 'plotly'",
@@ -406,7 +418,13 @@ guide5$init()
     ggplot_quanti_print <- eventReactive(input$run2,{
       plot_quanti(plot_type = input$plot_type,data=df(),variable_quanti1 = input$var2,variable_quanti2 = input$var3,
       variable_binaire=input$var_binaire,modalites = input$var_quali2,breaksHist = input$Classes,
-      breaksBox = input$Classes2,ajust = input$bool4,discr=input$bool2,type = "ggplot") 
+      breaksBox = input$Classes2,ajust = input$bool4,discr=input$bool2,type = "ggplot")
+    })
+    ggplotly_quanti_print <- eventReactive(input$run2,{
+      p<- plot_quanti(plot_type = input$plot_type,data=df(),variable_quanti1 = input$var2,variable_quanti2 = input$var3,
+      variable_binaire=input$var_binaire,modalites = input$var_quali2,breaksHist = input$Classes,
+      breaksBox = input$Classes2,ajust = input$bool4,discr=input$bool2,type = "ggplot")
+      ggplotly(p)
     })
     plotly_quanti_print <- eventReactive(input$run2,{
       plot_quanti(plot_type = input$plot_type,data=df(),variable_quanti1 = input$var2,variable_quanti2 = input$var3,
@@ -422,6 +440,9 @@ guide5$init()
       ggplot_quanti_print()
     })
 
+    output$ggplotly_quanti <- renderPlotly({
+      ggplotly_quanti_print()
+    })
     output$plotly_quanti <- renderPlotly({
        plotly_quanti_print()
     })
@@ -439,6 +460,10 @@ guide5$init()
     ggplot_quali_print <- eventReactive(input$run3,{
          plot_quali(plot_type = input$plot_type_quali,df(),input$var4,input$var5,input$bool3,palette_couleurs,"ggplot")
     })
+    ggplotly_quali_print <- eventReactive(input$run3,{
+         p <- plot_quali(plot_type = input$plot_type_quali,df(),input$var4,input$var5,input$bool3,palette_couleurs,"ggplot")
+         ggplotly(p)
+    })
     plotly_quali_print <- eventReactive(input$run3,{
          plot_quali(plot_type = input$plot_type_quali,df(),input$var4,input$var5,input$bool3,palette_couleurs,"plotly")
     })
@@ -448,6 +473,9 @@ guide5$init()
     })
     output$ggplot_quali <- renderPlot({
        ggplot_quali_print()
+    })
+    output$ggplotly_quali <- renderPlotly({
+      ggplotly_quali_print
     })
     output$plotly_quali <- renderPlotly({
       plotly_quali_print()
@@ -463,6 +491,28 @@ guide5$init()
     })
     ggplot_quali_quanti_print <- eventReactive(input$run4,{
         plot_quanti_quali(input$plot_type_quali_quanti,df(),input$var6,input$var8,input$var7,input$cat2,palette_couleurs,"ggplot")
+    })
+    ggplotly_quali_quanti_print <- eventReactive(input$run4,{
+        if(input$plot_type_quali_quanti=="scatterplot" && input$cat2=="toute la population"){
+          plot_ly() %>%
+          add_trace(
+            type = "scatter",
+            mode = "lines",
+            x = c(1, 2, 1.5, 1),
+            y = c(1, 1, 2, 1),
+            line = list(color = "red", width = 2)
+          ) %>%
+          layout(
+            title = "En Chantier",
+            xaxis = list(title = "En chantier"),
+            yaxis = list(title = "En chantier")
+          )
+        }
+        else{
+              p3<-plot_quanti_quali(input$plot_type_quali_quanti,df(),input$var6,input$var8,input$var7,input$cat2,palette_couleurs,"ggplot")
+              ggplotly(p3)
+        }
+      
     })
     plotly_quali_quanti_print <- eventReactive(input$run4,{
         if(input$plot_type_quali_quanti=="scatterplot" && input$cat2=="toute la population"){
@@ -489,6 +539,9 @@ guide5$init()
     })
     output$ggplot_quali_quanti <- renderPlot({
       ggplot_quali_quanti_print()
+    })
+    output$ggplotly_quali_quanti <- renderPlotly({
+      ggplotly_quali_quanti_print()
     })
     output$plotly_quali_quanti <- renderPlotly({
       plotly_quali_quanti_print()
