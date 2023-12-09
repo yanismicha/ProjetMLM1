@@ -58,7 +58,7 @@ names_data_binaire <- scinde(dt,"binaire")
 data_quanti <- dt[,names_data_quanti]
 data_quali <- dt[,names_data_quali]
 data_binaire <- dt[,names_data_binaire]
-source("R\\guide.r")
+source("guide.r")
 #a voir
 #data_quanti_names <- toJSON(names(data_quanti))
 ######fonctions à mettre dans un package#######

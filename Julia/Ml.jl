@@ -79,7 +79,12 @@ end
 g(x)= x isa AbstractString && x=="NA"
 filter(r -> all(!g,r),dtClean) #je filtre par ligne r , et je garde tout celles qui ne sastifassent pas la condition
 dtClean=filter(r -> all(!g,r),dtClean) 
-
+###expedition_role###
+##on visualise la table de contingence
+tab=combine(groupby(dt, :expedition_role), nrow=> :Freq)
+##on regarde les 10 premieres modalités avec le plus d'occurences
+sort(tab[!,[2,1]],rev=true)[1:10,:]
+## on ne garde que les modalites les plus pertinentes et on range les autres dans Autres.
 map_to_String(s) = length(s) == 2 ? "Autres" :  (occursin("Leader",s) || occursin("leader",s)) ? "Leader" : SubString(s,1:3) == "Cli" ? "Climber" : SubString(s,1:2) == "BC" ? "BaseCampStaff" : (occursin("Tv",s) || occursin("Film",s)) ? "Movie/TV_team" : "Autres"
 
 dtFinal=transform(dtClean, :expedition_role => ByRow(map_to_String) => :expedition_role)
