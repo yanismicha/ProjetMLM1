@@ -105,14 +105,57 @@ Le nombre de modalités de cette variable était de 391! En plus d'avoir un nomb
 Nous avons donc agréger toute ces arêtes en un seul sommet permettant de diminuer drastiquement le nombre de modalités.  
 Pour simplifier l'analyse, nous avons ensuite décider de ne garder que les 13 sommets avec le plus d'expéditions et de ranger tout les autres dans une nouvelle modalité: `autres`.  
 Notre variable ne comportant donc plus que 14 modalités.  
+<details>
+<summary style="font-weight: bold; color: #72afd2;">Tableau de contingence</summary>
+```{r}
+table(data$peak_name)
+```
+</details>
+
 
 **citizenship**:  
+Cette variable recense les nationalités de chaque individu.  Certains avait une double nationalité nous avons gardé que leur première nationalité. Pour les autres nous n'avons garder sur 213  pays que les 28 pays les plus représentés et de disposer les nationalités les moins représentés dans une variable `autres`.  
+<details>
+<summary style="font-weight: bold; color: #72afd2;">Tableau de contingence</summary>
+```{r}
+table(data$citizenship)
+```
+</details>
+  
+**expedition_role**
+Cette variable à été fastidieuse à traiter. Elle répertorie le rôle du grimpeur lors de l'expédition. cela peut aller du simple grimpeur, au leader, les guides de montagnes ou même les équipes de film.  
+En tout,c'est plus de 525 modalités.  Nous avons donc du faire le tri de ces différentes modalités et ne garder que celles qui ne nous paraissaient les plus pertinentes et comme pour `peak_name`et `citizenship` disposer les autres modalités dans une variable `autres`.  
+En regardant le  nombre d'occurence de chaque modalités mais également la pertinence des modalités on décide de ne garder plus que 5 modalités:  
 
+- `Leader` Le leader de la cordée.
+- `Climber` Un grimpeur classique.
+- `BaseCampStaff` Les médecins, les guides de montagnes, quelqu'un qui est payé pour accompagner la cordée.
+- `Movie/TV_team` un membre d'une équipe de TV ou de Film.
+- `Autres` tout les autres modalités.  
 
-Tout ce qui est remodeler des variables pour réduire les modalités.  
+<details>
+<summary style="font-weight: bold; color: #72afd2;">Tableau de contingence</summary>
+```{r}
+#code julia 
+#map_to_String(s) = length(s) == 2 ? "Autres" :  (occursin("Leader",s) || occursin("leader",s)) ? #"Leader" : SubString(s,1:3) == "Cli" ? "Climber" : SubString(s,1:2) == "BC" ? "BaseCampStaff" : #(occursin("Tv",s) || occursin("Film",s)) ? "Movie/TV_team" : "Autres"
+table(data$expedition_role)
+```
+</details>
 
 ### Création/suppression de variable
 La variable age était en format String, nous l'avons donc naturellement transformé en un format int.  
+Nous avons également supprimé de nombreuses variables qui ne nous paraissaient soit pas pertinente , soit n'ajoutant pas d'informations supplémentaires (redondances d'informations):  
+
+- `death_cause` Cause de la mort. Variable intéréssante uniquement pour la prédiction de la mort de l'alpiniste. Evidémment cette variable n'étant renseigné que pour les individus ayant trouvés la mort, cette variable compte plus de 98% de valeurs manquantes.
+- `death_height_metres` Hauteur de la mort. Idem que pour death_cause.
+- `member_id` Numéro d'identification de l'individu. Il ne s'agit pas réellement d'une variable mais simplement d'une identification de l'individu qui ne nous intéresse pas.
+- `expedition_id` Numéro d'identification de l'expédition. Cette variable nous permet seulement de savoir le nombre de personnes par cordée ce qui en soit pourrait être un élément important du succès. Il nous faudrait pour cela créer une nouvelle variable qui pour chaque individus indique le nombre de personnes dans sa cordée (en moyenne, 7 individus par cordée).  
+- `highpoint_metres` Point le plus haut atteint par l'individu.  Variable intéressante mais quasiment 30 % de données manquantes ce qui la rend compliquée à traiter et à utiliser.
+- `injury_height_metres`  Hauteur de la blessure de l'individu. Suppose une blessure ce qui n'es tpas forcément le cas, ce qui donne également une variable avec plus de 98% de données manquantes.
+- `injury_type` Le type de la blessure. Même problème que pour la variable précédente.
+- `peak_id` Numéro d'identification du sommet. N'ajoute pas plus d'informations que `peak_name`.  
+
+
 
 ## Analyse statistique des données
 ### Julia
@@ -328,7 +371,9 @@ plot_quanti_quali(plot_type = "boxplot",data = iris,var_quanti1 = "Sepal.Length"
 ## les compétences acquises 
 ### Julia
 - Apprentissage du langage
-- Initiation au multiple dispatching  
+- Initiation au multiple dispatching
+- Apprentissage supervisé  
+
 
 ### R
 - apprentissage de Shiny  et des différentes options
@@ -339,6 +384,10 @@ plot_quanti_quali(plot_type = "boxplot",data = iris,var_quanti1 = "Sepal.Length"
 ## axes d'amélioration du projet
 ### Analyse et traitement de données
 - gestion des NA dans notre jeu de données  
+Nous avons décidé d'enlever les lignes comportant des données manquantes, nous aurions pu choisir une autre approche.  
+Une possibilité était de remplacer ces données manquantes par les données les plus probables, avec par exemple l'approche des K plus proches voisins. Cette méthode consiste à prendre la ligne concerné par la donnée manquante et de la comparer avec les autres lignes. On choisis les k lignes les plus "proches" de celle ci et on donne comme valeur à la donnée manquante la moyenne des valeurs de ces k lignes.  
+Cependant, avec les données présentes dans les autres variables, aucune n'était pertinente pour supposer l'âge manquant de l'individu.  
+
 
 ### Interface
 
@@ -359,8 +408,10 @@ ggplot(data,aes(y = age, x = season,color = season))+
   stat_summary(fun = "mean", geom = "point", shape = 19, size = 1)
 ```
 </details>
-- Pouvoir discriminer une variable quanti par une autre dans les résumés avec des bins et un slider.
-- Ajouter la possibilité de rajouter/supprimer une ligne dans la data directement depuis l'interface. - Ajouter graphique interactif avec animation  
+- Pouvoir discriminer une variable quanti par une autre dans les résumés avec des bins et un slider.  
+**Exemple**: je veux connaître les différents estimateurs de la distribution (moyenne,mediane,...) de tout les personnes agées de 40 a 60 ans entre 1960 et 2000.  
+- Ajouter la possibilité de rajouter/supprimer une ligne dans la data directement depuis l'interface. 
+- Ajouter graphique interactif avec animation  
 `plotly` permet égalément de visualiser des graphiques avec animations ce qui est particulièrement utile pour les données temporelles mais également pour observer des graphiques par sous-population.  
 **Exemple**:
 ```{r,eval=FALSE}
@@ -393,6 +444,8 @@ Ce projet aura été d'une utilité formidable pour progresser, autant dans l'ap
 - les packages permettant d'appeler du code Julia et Python au sein du language R.  
 
 Mais également dans l'apprentissage d'un nouveau language `Julia` et de ses fonctionnalités.  
-Il a permis également de progresser en Machine Learning...
+Il a permis également de progresser en Machine Learning...  
+
+
 
 
