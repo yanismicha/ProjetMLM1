@@ -34,12 +34,11 @@ Ce projet est donc constitué de quatre principales parties:
 - La réalisation d'une interface et des composantes/fonctionnalités qui lui incombe.
 - la réalisation d'un apprentissage automatique sur le jeu de données.  
 
-(premiere predicition sur mort puis succes ,expliquer pourquoi,...)
 
 # Choix du projet
 ## Theme
 Notre première envie était de travailler avec des données relatives à l'escalade.  
-Après avoir eu l'idée de créer une carte interactive dans laquelle nous listerions tout coins de grimpe avec leurs caractéristique et la possibilité en se plaçant sur une carte de visualiser les endroits les plus proche pour escalader, nous avons préférer partir sur une autre idée: la prédiction sur un jeu de donnée relatif à l'escalade.  
+Après avoir eu l'idée de créer une carte interactive dans laquelle nous listerions tout les coins pour grimper avec leurs caractéristiques et la possibilité en se plaçant sur une carte de visualiser les endroits les plus proches pour escalader, nous avons préféré partir sur une autre idée: la prédiction sur un jeu de donnée relatif à l'escalade.  
 Après quelques recherche, les jeux de données les plus pertinents et intéressants concernant l'escalade étant le recensement des expéditions himalayennes.  
 
 ## Choix du jeu de données
@@ -158,8 +157,55 @@ Nous avons également supprimé de nombreuses variables qui ne nous paraissaient
 
 
 ## Analyse statistique des données
+Après traitement des données, nous avons réalisé une analyse statistique des données plus poussée. Cette analyse s'est réalisée principalement à l'aide de visualisation graphiques sur Julia et de tests statistiques sur R.  
+
 ### Julia
+L'analyse sur Julia à été faite surtout dans l'objectif de se familiariser avec les possibilités offertes par ce language notamment avec `StatsPlots` mais également avec `PlotlyJS`.  
+
 ### R
+Bien que l'analyse graphique ait été faites avec Julia, l'exploration des packages `ggplot` et `plotly` ont permis de pousser celle ci sur R.  
+En plus de cette dernière quelques tests statistiques ont été réalisés notamment dans l'objectif de tester la relation entre différentes variables.  
+**Exemple**:   
+Nous souhaitions savoir si l'âge  d'un individu dépendait selon le succès de l'expédition ou non. Pour espérer procéder à un test de student, nous regardons d'abord la distribution de nos deux groupes:
+```{r,echo=FALSE}
+plot_quanti("Density",data = data,variable_quanti1 = "age",modalites = "success",type = "ggplot")
+```
+<details>
+<summary style="font-weight: bold; color: #72afd2;">Voir le code</summary>
+```{r,eval=FALSE}
+plot_quanti("Density",data = data,variable_quanti1 = "age",modalites = "success",type = "ggplot")
+```
+</details>
+
+Les deux distributions on l'air de s'approcher d'une normale, on vérifie par un test de shapiro-wilk:  
+$\mathcal{H}_0$: La distribution suit une loi normale.  
+vs  
+$\mathcal{H}_1$: La distribution ne suit pas  une loi normale.  
+
+```{r,echo=FALSE}
+#la fonction shapiro ne prend pas d'échantillon de plus de 5000 donc je prend en aleatoire 5000 données
+test1 <-shapiro.test(sample(data[data$success=="false","age"],5000))
+test2 <-shapiro.test(sample(data[data$success=="true","age"],5000))
+test1
+```
+
+```{r,echo=FALSE}
+test2
+```
+les deux tests  rejettent $\mathcal{H}_0$ à un seuil bien plus bas que 1%, on peut sans trop de risque affirmer que nos deux groupes suivent une loi normale et donc procéder à un test de student.  
+
+Hypothèse:  
+$\mathcal{H}_0$: $\mu_1=\mu2 \Leftrightarrow$ "La moyenne d'age des individus est le même qu'il réussisse ou non l'expédition.    
+vs  
+$\mathcal{H}_1$: $\mu_1>\mu2 \Leftrightarrow$ "La moyenne d'age des individus est différente selon qu'il réussisse ou non l'expédition.   
+```{r,echo=FALSE}
+test <- t.test(data$age~data$success,var.equal=T,alternative = "greater")
+test
+```
+On rejette $\mathcal{H}_0$ à un seuil bien en dessous de 1%, on peut donc affirmer qu'en moyenne, les individus qui réussissent leur expéditions sont moins agés que ceux qui ne réussisse pas.  
+
+
+
 # Apprentissage automatique
 ## Python
 ## Julia
