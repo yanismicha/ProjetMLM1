@@ -58,31 +58,6 @@ Notre interface étant une application `shiny`, il nous a fallu pour ça utilise
 ```{r,cache=TRUE,echo=FALSE}
 data <- read.csv("https://www.dropbox.com/scl/fi/d3v41yp6x9cxlqvueoet3/membersClean.csv?rlkey=v9xfdgu6oyubjur9rlu6k9eow&dl=1")
 ```
-```{r,cache=TRUE,echo=FALSE}
-style_success <- function(value) {
-      if (value) {
-        list(color = "darkgreen")
-      } 
-      else {
-        list(color = "darkred")
-      }
-}
-theme_dark <- reactableTheme(
-      color = "hsl(233, 9%, 87%)",
-      backgroundColor = "hsl(233, 9%, 19%)",
-      borderColor = "hsl(233, 9%, 22%)",
-      stripedColor = "hsl(233, 12%, 22%)",
-      highlightColor = "hsl(233, 12%, 24%)",
-      inputStyle = list(backgroundColor = "hsl(233, 9%, 25%)"),
-      selectStyle = list(backgroundColor = "hsl(233, 9%, 25%)"),
-      pageButtonHoverStyle = list(backgroundColor = "hsl(233, 9%, 25%)"),
-      pageButtonActiveStyle = list(backgroundColor = "hsl(233, 9%, 28%)"))
-
-reactable(data[sample(1:73000,50),],
-        columns = list(success = colDef(align = "center", style = style_success 
-        ,filterable = FALSE)),fullWidth = TRUE,defaultColDef = colDef(style = "font-style: italic;"),searchable = TRUE,
-        filterable = TRUE,highlight = TRUE, showPageSizeOptions = TRUE,defaultPageSize = 10,pageSizeOptions = c(10, 50, 100),theme = theme_dark)
-```
 
 
 ## Traitement des données
@@ -153,6 +128,50 @@ Nous avons également supprimé de nombreuses variables qui ne nous paraissaient
 - `injury_height_metres`  Hauteur de la blessure de l'individu. Suppose une blessure ce qui n'es tpas forcément le cas, ce qui donne également une variable avec plus de 98% de données manquantes.
 - `injury_type` Le type de la blessure. Même problème que pour la variable précédente.
 - `peak_id` Numéro d'identification du sommet. N'ajoute pas plus d'informations que `peak_name`.  
+
+
+### Présentation de notre DATA
+Une fois nettoyé notre jeu de données comporte alors 73000 individus (les alpinistes) pour 13 variables:  
+
+- `peak_name`: le nom du sommet qui est grimpé lors de l'expédition.
+- `year`: l'année de l'expédition
+- `season` : saison durant laquelle s'est déroulée l'expédition.
+- `sex` : le genre de l'individu (Homme ou Femme).
+- `age` : l'age de l'individu.
+- `citizenship` : la nationalité de l'individu.
+- `expedition_role` : le rôle dans la cordée de l'individu.
+- `hired` :  variable indicatrice indiquant si l'individu est embauché pour réalisé son expédition ou non.
+- `success` :  variable indicatrice indiquant si l'individu à réussi son expédition ou non.
+- `oxygen_used` :  variable indicatrice indiquant si l'individu à utilisé de l'oxygène.
+- `died` :  variable indicatrice indiquant si l'individu est décédé lor de l'expédition ou non.
+- `injured` :  variable indicatrice indiquant si l'individu s'est bléssé ou non lors de l'expedition.  
+
+**Le jeu de donnnées**:
+```{r,cache=TRUE,echo=FALSE}
+style_success <- function(value) {
+      if (value) {
+        list(color = "darkgreen")
+      } 
+      else {
+        list(color = "darkred")
+      }
+}
+theme_dark <- reactableTheme(
+      color = "hsl(233, 9%, 87%)",
+      backgroundColor = "hsl(233, 9%, 19%)",
+      borderColor = "hsl(233, 9%, 22%)",
+      stripedColor = "hsl(233, 12%, 22%)",
+      highlightColor = "hsl(233, 12%, 24%)",
+      inputStyle = list(backgroundColor = "hsl(233, 9%, 25%)"),
+      selectStyle = list(backgroundColor = "hsl(233, 9%, 25%)"),
+      pageButtonHoverStyle = list(backgroundColor = "hsl(233, 9%, 25%)"),
+      pageButtonActiveStyle = list(backgroundColor = "hsl(233, 9%, 28%)"))
+
+reactable(data[sample(1:73000,50),],
+        columns = list(success = colDef(align = "center", style = style_success 
+        ,filterable = FALSE)),fullWidth = TRUE,defaultColDef = colDef(style = "font-style: italic;"),searchable = TRUE,
+        filterable = TRUE,highlight = TRUE, showPageSizeOptions = TRUE,defaultPageSize = 10,pageSizeOptions = c(10, 50, 100),theme = theme_dark)
+```
 
 
 
@@ -382,7 +401,7 @@ kable(head(scindeR::scinde(Orange,"quanti")))
 Ce package réunit l'ensemble des graphiques utilisés pour l'interface shiny.  
 Il est composé d'une part d'une fonction par type de graphique: boxplot,histogramme,...
 D'autre part d'une fonction par catégorie de graphique: quantitatif,qualitatif,quantitatif/qualitatif.  
-Dans chaque fonction est en fait implémenter un graphique pour chaque package que l'on souhaite comparer.  
+Dans chaque fonction est en fait implémenté un graphique pour chaque package que l'on souhaite comparer.  
 **Exemple** avec l'histogramme: 
 <details>
 <summary style="font-weight: bold; color: #72afd2;">Voir le code</summary>
