@@ -214,9 +214,9 @@ test2
 les deux tests  rejettent $\mathcal{H}_0$ à un seuil bien plus bas que 1%, on peut sans trop de risque affirmer que nos deux groupes suivent une loi normale et donc procéder à un test de student.  
 
 Hypothèse:  
-$\mathcal{H}_0$: $\mu_1=\mu2 \Leftrightarrow$ "La moyenne d'age des individus est le même qu'il réussisse ou non l'expédition.    
+$\mathcal{H}_0$: $\mu_1=\mu_2 \Leftrightarrow$ "La moyenne d'age des individus est le même qu'il réussisse ou non l'expédition.    
 vs  
-$\mathcal{H}_1$: $\mu_1>\mu2 \Leftrightarrow$ "La moyenne d'age des individus est différente selon qu'il réussisse ou non l'expédition.   
+$\mathcal{H}_1$: $\mu_1>\mu_2 \Leftrightarrow$ "La moyenne d'age des individus est différente selon qu'il réussisse ou non l'expédition.   
 ```{r,echo=FALSE}
 test <- t.test(data$age~data$success,var.equal=T,alternative = "greater")
 test
@@ -484,6 +484,9 @@ p <- ggplot(data, aes(x = year, y = age)) + geom_point()
 ggplotly(p + aes(frame = citizenship)) |> animation_opts(frame = 1500, transition = 500)
 ```
 
+- rendre l'interface réellement utilisable pour n'importe quel jeu de donnée. Il suffit pour cela d'ajouter la possibilité au sein de l'interface de pouvoir importer un jeu de donnée, l'interface étant déjà codé pour n'importe quelle jeu de donnée au format csv.  
+- déployer l'interface sur un serveur afin qu'elle soit accessible directement depuis un lien.  
+- travailler l'esthétique de l'interface avec du CCS pour la rendre plus lisible et plus accessible.
 
 
 
@@ -500,12 +503,12 @@ Permettre d'automatiser le machine learning dans l'inerface pour n'importe quel 
 
   
   
-## Conclusion générale
+## Conclusion générale 
 Ce projet aura été d'une utilité formidable pour progresser, autant dans l'apprentissage de certains packages:
 
 - `ggplot2`,`plotly` et de leurs grammaire pour ce qui est de la visualisation statistique.
 - `shiny` pour ce qui est de la création d'interface.
-- `quarto`pour la création de rapport statistiques et de la présentation.
+- `quarto` pour la création de rapport statistiques et de la présentation.
 - les packages permettant d'appeler du code Julia et Python au sein du language R.  
 
 Mais également dans l'apprentissage d'un nouveau language `Julia` et de ses fonctionnalités.  
