@@ -26,8 +26,8 @@ if(!require(ggmosaic)){
 if(!require(patchwork)){
   install.packages("patchwork")
 }
-if(!require(separ)){
-  install.packages("separ")
+if(!require(scindeR)){
+  install.packages("scindeR")
 }
 if(!require(compar)){
   install.packages("compar")
@@ -47,21 +47,21 @@ require(scales)
 require(ggrepel)
 require(ggmosaic)
 require(patchwork)
-require(separ)#permet de scinder ma data en quanti, quali et binaire.
+require(scindeR)#permet de scinder ma data en quanti, quali et binaire.
 require(compar)#permet de comparer les plots.
 require(plotly)
 palette_couleurs <- brewer.pal(12, "Set3")
 dt <- read.csv("https://www.dropbox.com/scl/fi/d3v41yp6x9cxlqvueoet3/membersClean.csv?rlkey=v9xfdgu6oyubjur9rlu6k9eow&dl=1")
-names_data_quali <- scinde(dt,"quali")
-names_data_quanti <- scinde(dt,"quanti")
-names_data_binaire <- scinde(dt,"binaire")
-data_quanti <- dt[,names_data_quanti]
-data_quali <- dt[,names_data_quali]
-data_binaire <- dt[,names_data_binaire]
+data_quali <- scinde(dt,"quali")
+names_data_quali <- names(data_quali)
+data_quanti <- scinde(dt,"quanti")
+names_data_quanti <- names(data_quanti)
+data_binaire <- scinde(dt,"binaire")
+names_data_binaire <- names(data_binaire)
+
 source("guide.r")
 #a voir
 #data_quanti_names <- toJSON(names(data_quanti))
-######fonctions à mettre dans un package#######
 
 
 
@@ -107,15 +107,15 @@ ui <- dashboardPage(
           actionBttn(inputId = "guide1",label = "Guide", style = "stretch",color = "primary"),
           h2("Informations requises:"),
           selectInput("var1", " Choisissez une variable", choices = names(dt)),
-          conditionalPanel(
-            condition = '["year","age"].includes(input.var1)',
+          #conditionalPanel(
+            #condition = '["year","age"].includes(input.var1)',
             radioButtons("bool1", "Souhaitez vous regarder une partie de la population?", choices = c('non', 'oui')),
             conditionalPanel(
               condition = "input.bool1 == 'oui'",
               selectInput("var_quali", "Variable à discriminer:", choices = names(data_quali)),
               selectInput("cat1", "Quel partie de la population souhaitez vous regarder?", choices = NULL)
-            )
-          ),
+            ),
+          #),
           actionBttn(inputId = "run",label = "run", style = "unite",size = "md",color = "royal")
         ),
         mainPanel(
@@ -379,7 +379,7 @@ guide5$init()
         resume <- eventReactive(input$run, {
             v1 <- input$var1
             x1 <- df()[,v1]
-            if(typeof(x1) == "integer"){##cas ou c'est un variable quanti
+            if(v1 %in% names_data_quanti){##cas ou c'est un variable quanti
               if(input$bool1 == "oui"){##on regarde une sous partie
                 data_filtre <- df()[df()[,input$var_quali] == input$cat1, ]
                 n_observations <- length(data_filtre[,v1])
@@ -394,11 +394,23 @@ guide5$init()
                  summary(df()[,input$var1])
             }
             else{#cas d'une variable qualitative#
-              effectifs <- table(x1)
-              frequence <- round(effectifs/length(x1)*100,2)
-              frequence_cumulés <- cumsum(frequence)
-              table_data <- data.frame(Effectif = as.vector(effectifs), Frequence = as.vector(frequence), Frequence_Cumulees= frequence_cumulés)
-              table_data
+              if(input$bool1 == "oui"){##on regarde une sous partie
+                data_filtre <- df()[df()[,input$var_quali] == input$cat1, ]
+                subx1 <- data_filtre[,v1]
+                effectifs <- table(subx1)
+                effectifsCumulés <- cumsum(effectifs)
+                frequence <- round(effectifs/length(subx1)*100,2)
+                frequence_cumulés <- cumsum(frequence)
+                table_data <- data.frame(Effectif = as.vector(effectifs),EffectifsCumules= effectifsCumulés, Frequence = as.vector(frequence), Frequence_Cumulees= frequence_cumulés)
+                table_data
+              }
+              else{
+                effectifs <- table(x1)
+                frequence <- round(effectifs/length(x1)*100,2)
+                frequence_cumulés <- cumsum(frequence)
+                table_data <- data.frame(Effectif = as.vector(effectifs), Frequence = as.vector(frequence), Frequence_Cumulees= frequence_cumulés)
+                table_data
+              }
             }
         },ignoreNULL = FALSE) #ignoreNull=false, permet d'afficher sans cliquer sur run
 
