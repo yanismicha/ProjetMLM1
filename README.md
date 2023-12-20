@@ -12,5 +12,5 @@ sur le jeu de données tout en pouvant comparer les graphiques provenant des pac
 brew install python@3.11
 python3 -m venv /Python/venv
 source Python/venv/bin/activate
-pip install -r /Python/requirements. txt
+pip install -r /Python/requirements.txt
 ```
