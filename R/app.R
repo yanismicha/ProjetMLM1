@@ -108,7 +108,7 @@ ui <- dashboardPage(
           h2("Informations requises:"),
           selectInput("var1", " Choisissez une variable", choices = names(dt)),
           #conditionalPanel(
-            #condition = '["year","age"].includes(input.var1)',
+            #condition = paste0('[',paste('"',names_data_quanti,'"',collapse=",",sep=""),']','.includes(input.var1)'),
             radioButtons("bool1", "Souhaitez vous regarder une partie de la population?", choices = c('non', 'oui')),
             conditionalPanel(
               condition = "input.bool1 == 'oui'",
