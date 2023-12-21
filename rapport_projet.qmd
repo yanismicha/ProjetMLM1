@@ -226,8 +226,87 @@ On rejette $\mathcal{H}_0$ à un seuil bien en dessous de 1%, on peut donc affir
 
 
 # Apprentissage automatique
-## Python
+## Introduction
+
+Dans ce projet, nous avons choisi de comparer la mise en place de méthodes d'apprentissage supervisé en les implémentant en Julia et Python pour les évaluer. Les deux méthodes que nous avons choisies sont RandomForest (RF) et K-Nearest Neighbour (KNN). Notre choix s'est porté sur ces deux dernières car nous les avons étudiées l'année passée dans un cours d'introduction au machine learning. Un autre facteur qui nous a poussés à choisir ces deux algorithmes est qu'ils utilisent le même prétraitement pour les données à l'entrée de l'algorithme.
+
+## Présentation des modèles
+
+### OneHotEncode
+
+Le OneHotEncode (OHE) a pour objectif d'encoder les variables catégorielles en une matrice unitaire.
+
+#### Exemple
+
+On observe 4 individus en notant leur sexe et la nature de leur contrat de travail:
+
+```{=html}
+<style type="text/css">
+.tg  {border-collapse:collapse;border-spacing:0;}
+.tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg .tg-0pky{border-color:inherit;text-align:left;vertical-align:top}
+</style>
+```
+
+Après passage dans le OneHotEncoder, on obtient la matrice suivante:
+
+```{=html}
+<style type="text/css">
+.tg  {border-collapse:collapse;border-spacing:0;}
+.tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg .tg-0lax{text-align:left;vertical-align:top}
+</style>
+```
+
+Maintenant, nous pouvons appliquer des opérations mathématiques sur la matrice obtenue, comme calculer des effectifs de façon simple ou des distances entre les individus. Cependant, le OneHotEncoder présente un inconvénient majeur, car il augmente énormément le nombre de colonnes de la matrice de base si les variables contiennent beaucoup de catégories.
+
+### K-Nearest Neighbour
+
+Soit (k \in 2 \mathbb{N} + 1). Une fois notre matrice de données et l'individu passé dans le OHE, on calcule la distance de notre individu par rapport à chaque ligne de la matrice de données, et on obtient une nouvelle matrice appelée matrice de distance. On regarde les (k) distances les plus faibles pour identifier les (k) individus qui ressemblent le plus. On observe les (k) valeurs des données à prédire et on attribue par la suite à notre individu à prédire la classe qui le représente.
+
+### RandomForest
+
+Les forêts aléatoires reposent sur la construction d'arbres de décision de manière itérative. Elles se décomposent en plusieurs étapes:
+
+1.  Création des arbres : La Random Forest commence par créer un ensemble d'arbres de décision. Chaque arbre est formé sur un sous-ensemble aléatoire des données d'entraînement.
+
+2.  Prédiction des arbres : Une fois les arbres entraînés, une prédiction est obtenue en faisant voter tous les arbres. Pour une classification, chaque arbre "vote" pour une classe, et la classe qui obtient le plus de votes est choisie comme prédiction finale.
+
+3.  Réduction de la corrélation : L'une des forces de la forêt aléatoire est de grandement limiter la corrélation, car chaque arbre est entraîné sur une petite partie du jeu de données.
+
+## Mise en place des méthodes
+Python étant actuellement un langage de référence dans le monde du machine learning, il existe un package bien pratique contenant tous les outils nécessaires à l'apprentissage supervisé. Ce package est Scikit-learn. Pour bien fonctionner, il s'appuie sur le package NumPy qui permet de manipuler les objets mathématiques de base.
+
+### Difficultés
+
+Nous n'avons pas rencontré de difficultés particulières avec l'utilisation de ces packages en raison de notre familiarité avec ces manipulations. Le gros avantage de Python par rapport à Julia est que le langage est assez permissif en ce qui concerne la structure des données au niveau du prétraitement et que toutes les fonctionnalités sont incorporées dans un seul package, contrairement à Julia, comme nous le détaillerons par la suite.
+
 ## Julia
+
+Julia étant un langage de programmation plus jeune que Python, la partie machine learning n'est pas simple à prendre en main en tant qu'utilisateur. Nous détaillerons par la suite les difficultés rencontrées. Cependant, le package MLJ.jl me paraît très prometteur car il essaye de réunir toutes les fonctionnalités de machine learning, tout comme le fait Scikit-learn (qui possède une version Julia qui n'est pas encore à la hauteur selon moi).
+
+### Difficultés
+
+#### OneHotEncoder
+
+Dans un premier temps, contrairement à Python, le OHE de MLJ.jl ne nous a pas permis de transformer un vecteur (individu à prédire) en utilisant la fonction transform, qui devrait normalement fonctionner après avoir adapté notre modèle aux données. Pour remédier à ce problème, nous avons choisi d'ajouter l'individu à prédire en dernière place des données à transformer via le OHE, en utilisant la fonction fit!. Une autre difficulté a été de mettre les dataframes au bon format pour pouvoir utiliser le OHE. Pour cela, nous avons utilisé la fonction coerce, qui permet de transformer les colonnes de type String64 en Multiclass, ce type étant pris en charge par notre OHE.
+
+#### K-Nearest Neighbour
+
+Pour utiliser la prédiction via un KNN en plus du package MLJ.jl, nous avons aussi utilisé NearestNeighbors. Pas de difficulté particulière, sauf un petit problème sur une transposition de matrice qui augmentait grandement le temps de calcul. On passait du calcul de normes dans (\mathbb{R}\^{60}) à une norme dans (\mathbb{R}\^{7300}), ce qui explique pourquoi la matrice de distance prenait presque 1h à être calculée.
+
+#### RandomForest
+
+La méthode qui nous aura pris le plus de temps à mettre en œuvre est le RandomForest, car le package MLJ propose plusieurs implantations de RandomForest provenant de packages variés. Dans un premier temps, nous avons testé avec l'interface de Scikit-learn, mais elle appelait Python en interne, ce qui perd de l'intérêt pour notre comparaison. Nous avons donc opté pour la librairie DecisionTree, qui était disponible dans les modèles. Cependant, nous avons rencontré quelques petites difficultés comme .fit et .predict qui sont définis dans les deux packages, ce qui produisait l'erreur "MethodError: no method matching" alors que l'on utilisait les mêmes types que ceux spécifiés dans la documentation. Pour remédier à ce problème, nous avons simplement remplacé .fit et .predict par DecisionTree.fit et DecisionTree.predict quand cela était nécessaire.
+
+
+
 # Interface Shiny
 ## Objectif de l'interface
 La création de l'interface avait pour première mission d'implémenter l'apprentissage automatique réalisé sur notre jeu de données. Ceci pour permettre à un utilisateur lambda de pouvoir jouer en prédisant le succès ou non de sa potentielle expédition Himalayenne suivant moultes conditions.  
