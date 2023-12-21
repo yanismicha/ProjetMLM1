@@ -6,7 +6,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 import time as tm
 
-data = pd.read_csv("DataSets/membersClean.csv")
+data = pd.read_csv("../DataSets/membersClean.csv")
 target = data.success
 print("Load success")
 
@@ -15,6 +15,24 @@ def EncodeData(data,indiv):
     data[boolean] = data[boolean].replace(False, 0)
     data[boolean] = data[boolean].replace(True, 1)
     data["sex"] = data["sex"].replace("F", 1).replace("M", 0)
+    y_dict = {
+        "peak_name" : [indiv[0]],
+        "season" : [indiv[1]],
+        "citizenship" : [indiv[2]],
+        "expedition_role" : [indiv[3]],
+        "year": [indiv[4]],
+        "sex": [indiv[5]],
+        "age": [indiv[6]],
+        "hired": [indiv[7]],
+        "solo": [indiv[8]],
+        "oxygen_used": [indiv[9]],
+        "died": [indiv[10]],
+        "injured": [indiv[11]]
+    }
+    ydf = pd.DataFrame.from_dict(y_dict)
+    ydf[boolean] = data[boolean].replace("false", 0)
+    ydf[boolean] = data[boolean].replace("true", 1)
+    ydf["sex"] = data["sex"].replace("F", 1).replace("M", 0)
     y = data.success
     Y_encoded = []
     categorical_variables = ["peak_name", "season", "citizenship", "expedition_role"]
@@ -24,24 +42,12 @@ def EncodeData(data,indiv):
 
     enc = OneHotEncoder()
     X_cat_hot = enc.fit_transform(data[categorical_variables])
-    y_dict = {
-        "peak_name" : [indiv[0]],
-        "season" : [indiv[1]],
-        "citizenship" : [indiv[2]],
-        "expedition_role" : [indiv[3]]
-    }
-    ydf = pd.DataFrame.from_dict(y_dict)
 
-    Y_cat_hot = enc.transform(ydf)
+    Y_cat_hot = enc.transform(ydf[categorical_variables])
 
-    labels = enc.get_feature_names_out().tolist()
-    for e in ["sex", "age", "hired", "solo", "oxygen_used", "injured", "died"]:
-        labels.append(e)
     X_encoded = np.concatenate([X_cat_hot.toarray(), data[quantitative_variables]], axis=1)
-    indiv_array = np.zeros((len(indiv[4:]),1))
-    indiv_array[:,0] = indiv[4:]
+    Y_encoded = np.concatenate([Y_cat_hot.toarray(), ydf[quantitative_variables]], axis=1)
 
-    Y_encoded = np.concatenate([Y_cat_hot.toarray(), indiv_array.T], axis=1)
     return [X_encoded,Y_encoded]
 
 def PredictKNN(indiv,dataencode,y,p = 3,n = 11):
@@ -50,7 +56,7 @@ def PredictKNN(indiv,dataencode,y,p = 3,n = 11):
     KNN.fit(X_train,y_train)
     res_predi = KNN.predict(indiv)
     prob_predi = KNN.predict_proba(indiv)
-    return [res_predi,prob_predi]
+    return [res_predi[0],prob_predi[0][0],prob_predi[0][1]]
 def PredictForest(data,X,indiv,n = 2):
     random_forest = RandomForestClassifier(criterion = "gini",n_estimators = n)
     target = data.success
@@ -58,7 +64,7 @@ def PredictForest(data,X,indiv,n = 2):
     random_forest.fit(X_train,y_train)
     res_predi = random_forest.predict(indiv)
     prob_predi = random_forest.predict_proba(indiv)
-    return [res_predi,prob_predi]
+    return [res_predi[0],prob_predi[0][0],prob_predi[0][1]]
 
 def KNN_Process(data,indiv,y,p=3,n=11):
     t0 = tm.time()
@@ -73,7 +79,3 @@ def Tree_Process(data,indiv,n=2):
     res_predict = PredictForest(data,process[0], process[1],n)
     res_predict.append(tm.time() - t0)
     return res_predict
-
-#indiv_predic = ["Ama Dablam","Autumn","France","Climber",2025,1,90,1,1,1,1,1]
-#print(KNN_Process(data,indiv_predic,target))
-#print(Tree_Process(data,indiv_predic))
