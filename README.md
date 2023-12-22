@@ -14,5 +14,21 @@ En plus de l'application AnalyseR, vous trouverez les packages crées permettant
 Vpus trouverez également le rapport et la présentation dédiés au projet au format html (resp. `rapport.html`et presentation_projet.html`) avec leurs fichiers respectifs. Le rapport étant dans un format spécifique, le dossier `_extensions`est également nécessaire pour son bon fonctionnement (format personnalisé depuis un templates déja existant: SOURCE https://github.com/juba/bookup-html).  
 
 # Application shiny AnalyseR
-Pour lancer l'application, il vous faudra executer la commande suivante:
+Pour lancer l'application, il vous faudra vous placer dans la page principale du projet (~ProjetMLM1) et executer la commande suivante:
+``` r
+runApp("R/AnalyseR.R)
+```
+Il se peut que les différents packages crées par nos soins ne s'installe pas correctement, si tel est le cas, ils sont disponible en format tar.gz dans le dossier **R/packagesR**.
+
+# Machine Learning
+Pour la partie de Machine Learning, elle fonctionne très bien de manière autonome mais n'est pas encore opérationnelle au sein de l'interface.
+Pour vous permettre d' utiliser la partie python, il vous faut réaliser quelques opérations au sein du projet.
+
+## création d'un environnement virtuel
+```{source, engine='bash'}
+brew install python@3.11 # uniquement sous linux et mac
+python3 -m venv /Python/venv
+source Python/venv/bin/activate
+pip install -r /Python/requirements.txt
+```
 
