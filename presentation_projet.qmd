@@ -39,7 +39,11 @@ Ce projet est constitué de quatre principales parties:
 
 ## Choix du jeu de données
 
-- notre data
+- `Himalayan Expeditions`: un jeu de données sur le recensement de l'ensemble des expéditions himalayennes depuis le début du 20eme siècle.
+- Prédiction sur `death`: une faible proportion de décès et variables limitées ont rendu l'apprentissage supervisé peu pertinent
+- Prédiction sur `success`: Transition vers jeu de données `expeditions`  mettant l'accent sur la variable success pour une prédiction plus pertinente.
+- Préparation du jeu de données expeditions en vue d'une analyse approfondie et de l'application d'algorithmes d'apprentissage supervisé.
+
 
 # Analyse et traitement des données 
 
@@ -123,7 +127,10 @@ plot_quanti("Density",data = data,variable_quanti1 = "age",modalites = "success"
 
 # Apprentissage automatique
 ## Python
+- Présentation robin
+
 ## Julia
+- Présentation robin
 
 
 # Interface Shiny
@@ -146,10 +153,13 @@ plot_quanti("Density",data = data,variable_quanti1 = "age",modalites = "success"
 - compaR: package sur la comparaison de graphiques basé sur les packages  `base`,`ggplot2`et `plotly`.
 
 ### Julia
-
+- Partie de robin
+- Partie de robin
 
 ### Python
 
+- Partie de robin
+- Partie de robin
 :::
 
 # Conclusion

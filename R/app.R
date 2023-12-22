@@ -4,7 +4,6 @@ if(!require(here)){
 if(!require(JuliaCall)){
   install.packages("JuliaCall")
 }
-path = paste0(here(),"/R/")
 if(!require(shiny)){
   install.packages("shiny")
 }
@@ -34,14 +33,14 @@ if(!require(patchwork)){
   install.packages("patchwork")
 }
 if(!require(scindeR)){
-  install.packages(paste0(path,"packagesR/scindeR_0.0.0.9000.tar.gz"), repos = NULL, type = "source")
+  install.packages(paste0(path,"/packagesR/scindeR_0.0.0.9000.tar.gz"), repos = NULL, type = "source")
 }
 if(!require(compar)){
   install.packages(paste0(path,"packagesR/compar_0.0.0.9000.tar.gz"), repos = NULL, type = "source")
 }
-if(!require(PredictionPython)){
-  install.packages(paste0(path,"packagesR/PredictionPython_1.0.tar.gz"), repos = NULL, type = "source")
-}
+# if(!require(PredictionPython)){
+#   install.packages(paste0(path,"/packagesR/PredictionPython_1.0.tar.gz"), repos = NULL, type = "source")
+# }
 if(!require(plotly)){
   install.packages("plotly")
 }
@@ -59,15 +58,14 @@ require(ggmosaic)
 require(patchwork)
 require(scindeR)#permet de scinder ma data en quanti, quali et binaire.
 require(compar)#permet de comparer les plots.
-require(PredictionPython)
 require(plotly)
-require(PredictionPython)
+#require(PredictionPython)
 require(JuliaCall)
-setwd(path)
-julia <- julia_setup()
-
-julia_install_package("https://github.com/RobinChaussemy/JuliaPredict.jl.git")
-julia_library("JuliaPredict")
+# setwd(path)
+# julia <- julia_setup()
+# 
+# julia_install_package("https://github.com/RobinChaussemy/JuliaPredict.jl.git")
+# julia_library("JuliaPredict")
 
 palette_couleurs <- brewer.pal(12, "Set3")
 dt <- read.csv("https://www.dropbox.com/scl/fi/d3v41yp6x9cxlqvueoet3/membersClean.csv?rlkey=v9xfdgu6oyubjur9rlu6k9eow&dl=1")
@@ -78,7 +76,7 @@ names_data_quanti <- names(data_quanti)
 data_binaire <- scinde(dt,"binaire")
 names_data_binaire <- names(data_binaire)
 
-source(paste0(path,"guide.r"))
+source("guide.r")
 #a voir
 #data_quanti_names <- toJSON(names(data_quanti))
 
@@ -127,8 +125,8 @@ ui <- dashboardPage(
           h2("Informations requises:"),
           selectInput("var1", " Choisissez une variable", choices = names(dt)),
           #conditionalPanel(
-            #condition = paste0('[',paste('"',names_data_quanti,'"',collapse=",",sep=""),']','.includes(input.var1)'),
-            radioButtons("bool1", "Souhaitez vous regarder une partie de la population?", choices = c('non', 'oui')),
+          #condition = paste0(toJSON(names_data_quanti),'.includes(input.var1)'),
+          radioButtons("bool1", "Souhaitez vous regarder une partie de la population?", choices = c('non', 'oui')),
             conditionalPanel(
               condition = "input.bool1 == 'oui'",
               selectInput("var_quali", "Variable à discriminer:", choices = names(data_quali)),
@@ -584,50 +582,77 @@ guide5$init()
 
 
  #################################PARTIE PREDICTIONS PYTHON#########################
- predict_knnP <- eventReactive(input$run5,{
-   if (input$type_pred == "knn"){
-     ind <- c(input$peak,input$season,input$citizenship,input$role,input$year,input$sex,input$age,input$hired,input$solo,input$oxygen,0,0)
-     predict <- KNN_Python(ind)
-     output$textPython <- renderText({
-       paste("Vous avez ",round(predict$proba_s*100,0),"% de chances de réussir",".","La prediction à mis : ",round(predict$temps,3),"s")
-     })
-     updateProgressBar(session = session, id = "pb1", value = round(predict$proba_s*100,0),total=100)
-   }else{
-     ind <- list(input$peak,input$season,input$citizenship,input$role,input$year,input$sex,input$age,input$hired,input$solo,input$oxygen,0,0)
-     Forest = RandomForest_Python(ind,5)
-     output$textPython <- renderText({
-       paste("Vous avez ",round(Forest$proba_s*100,0),"% de chances de réussir",".","La prediction à mis : ",round(Forest$temps,3),"s")
-     })
-     updateProgressBar(session = session, id = "pb1", value = round(Forest$proba_s*100,0), total = 100)
-   }
-
- })
+    predict_knnP <- eventReactive(input$run5,{
+      # if (input$type_pred == "knn"){
+      #   ind <- c(input$peak,input$season,input$citizenship,input$role,input$year,input$sex,input$age,input$hired,input$solo,input$oxygen,0,0)
+      #   tryCatch({
+      #     predict <- KNN_Python(ind)
+      #   }, error = function(e) {
+      #     "Une erreur s'est produite lors de l'exécution de Python/main.py."
+      #   })
+      #   if(typeof(predict) == "list"){
+      #     output$textPython <- renderText({
+      #       paste("Vous avez ",round(predict$proba_s*100,0),"% de chances de réussir",".","La prediction à mis : ",round(predict$temps,3),"s")
+      #     })
+      #     updateProgressBar(session = session, id = "pb1", value = round(predict$proba_s*100,0),total=100)
+      #   }
+      # }else{
+      #   ind <- list(input$peak,input$season,input$citizenship,input$role,input$year,input$sex,input$age,input$hired,input$solo,input$oxygen,0,0)
+      #   tryCatch({
+      #     Forest <- RandomForest_Python(ind,5)
+      #   }, error = function(e) {
+      #     "Une erreur s'est produite lors de l'exécution de Python/main.py."
+      #   })
+      #   if(typeof(Forest) == "list"){
+      #     output$textPython <- renderText({
+      #       paste("Vous avez ",round(Forest$proba_s*100,0),"% de chances de réussir",".","La prediction à mis : ",round(Forest$temps,3),"s")
+      #     })
+      #     updateProgressBar(session = session, id = "pb1", value = round(Forest$proba_s*100,0), total = 100)
+      #   }
+      # }
+      ## a enlever une fois les pb réglés##
+      sample <- sample(100,1)
+      output$textPython <- renderText({
+        paste("Vous avez ",sample,"% de chances de reussir",".","La prediction a mis : ",abs(runif(1)),"s")
+      })
+      updateProgressBar(session,id = "pb1",value = sample)
+      ##                                 ##
+    })
+    predict_knnJ <- eventReactive(input$run5,{
+      # if (input$type_pred == "knn"){
+      #   julia_command("KNN = JuliaPredict.KNN_Process(JuliaPredict.get_data(),JuliaPredict.get_indiv())")
+      #   KNN <- julia_eval("KNN")
+      #   output$textJulia <- renderText({
+      #     paste("Vous avez ",round(KNN[1]*100,0),"% de chances de réussir",".","La prediction à mis : ",round(KNN[2],4),"s")
+      #   })
+      #   updateProgressBar(session = session, id = "pb2", value = round(KNN[1]*100,0),total=100)
+      # }else{
+      #   julia_command("Tree = JuliaPredict.Tree_Process(JuliaPredict.get_data(),JuliaPredict.get_indiv())")
+      #   Tree <- julia_eval("Tree")
+      #   output$textJulia <- renderText({
+      #     paste("Vous avez ",round(Tree[[3]]*100,0),"% de chances de réussir",".","La prediction à mis : ",round(Tree[[4]],3),"s")
+      #   })
+      #   updateProgressBar(session = session, id = "pb2", value = round(Tree[[3]]*100,0), total = 100)
+      # }
+      
+      ## a enlever une fois les pb regles##
+      sample2 <- sample(100,1)
+      output$textJulia <- renderText({
+        paste("Vous avez ",sample2,"% de chances de reussir",".","La prediction a mis : ",abs(runif(1)),"s")
+      })
+      updateProgressBar(session,id = "pb2",value = sample2)
+      ## a enlever une fois les pb reglés##
+      
+    })
     
- predict_knnJ <- eventReactive(input$run5,{
-   if (input$type_pred == "knn"){
-     julia_command("KNN = JuliaPredict.KNN_Process(JuliaPredict.get_data(),JuliaPredict.get_indiv())")
-     KNN <- julia_eval("KNN")
-     output$textJulia <- renderText({
-       paste("Vous avez ",round(KNN[1]*100,0),"% de chances de réussir",".","La prediction à mis : ",round(KNN[2],4),"s")
-     })
-     updateProgressBar(session = session, id = "pb2", value = round(KNN[1]*100,0),total=100)
-   }else{
-     julia_command("Tree = JuliaPredict.Tree_Process(JuliaPredict.get_data(),JuliaPredict.get_indiv())")
-     Tree <- julia_eval("Tree")
-     output$textJulia <- renderText({
-       paste("Vous avez ",round(Tree[[3]]*100,0),"% de chances de réussir",".","La prediction à mis : ",round(Tree[[4]],3),"s")
-     })
-     updateProgressBar(session = session, id = "pb2", value = round(Tree[[3]]*100,0), total = 100)
-   }
- })
-
-  output$predknnP <- renderPrint({
-    predict_knnP()
-  })
-  output$predknnJ <-renderPrint({
-    predict_knnJ()
-  })
- 
+    output$predknnP <- renderPrint({
+      predict_knnP()
+    })
+    output$predknnJ <-renderPrint({
+      predict_knnJ()
+    })
+    
+    
 
 
     #sauvegarde de df au format csv
