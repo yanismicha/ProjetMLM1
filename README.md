@@ -18,8 +18,11 @@ git clone https://github.com/yanismicha/ProjetMLM1.git
 ```
 
 # Application shiny AnalyseR
-Pour lancer l'application, il vous faudra vous placer dans la page principale du projet (~ProjetMLM1) et executer la commande suivante:
+Pour lancer l'application, il vous faudra vous placer dans la page principale du projet (~ProjetMLM1) et executer les commandes suivante:
 ``` r
+if(!require(shiny))
+  install.packages("shiny")
+require(shiny)
 runApp("R/AnalyseR.R)
 ```
 Il se peut que les différents packages crées par nos soins ne s'installe pas correctement, si tel est le cas, ils sont disponible en format tar.gz dans le dossier **R/packagesR**.
