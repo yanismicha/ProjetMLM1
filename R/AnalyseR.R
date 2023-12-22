@@ -1,6 +1,7 @@
 if(!require(here)){
   install.packages("here")
 }
+require(here)
 if(!require(JuliaCall)){
   install.packages("JuliaCall")
 }
@@ -32,11 +33,12 @@ if(!require(ggmosaic)){
 if(!require(patchwork)){
   install.packages("patchwork")
 }
+path=here()
 if(!require(scindeR)){
-  install.packages(paste0(path,"/packagesR/scindeR_0.0.0.9000.tar.gz"), repos = NULL, type = "source")
+  install.packages(paste0(path,"R/packagesR/scindeR_0.0.0.9000.tar.gz"), repos = NULL, type = "source")
 }
 if(!require(compar)){
-  install.packages(paste0(path,"packagesR/compar_0.0.0.9000.tar.gz"), repos = NULL, type = "source")
+  install.packages(paste0(path,"R/packagesR/compar_0.0.0.9000.tar.gz"), repos = NULL, type = "source")
 }
 # if(!require(PredictionPython)){
 #   install.packages(paste0(path,"/packagesR/PredictionPython_1.0.tar.gz"), repos = NULL, type = "source")
