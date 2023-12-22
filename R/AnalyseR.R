@@ -1,86 +1,16 @@
-if(!require(here)){
-  install.packages("here")
-}
-require(here)
-if(!require(JuliaCall)){
-  install.packages("JuliaCall")
-}
-if(!require(shiny)){
-  install.packages("shiny")
-}
-require(shiny)
-if(!require(shinydashboard)){
-  install.packages("shinydashboard")
-}
-if(!require(shinythemes)){
-  install.packages("shinythemes")
-}
-if(!require(RColorBrewer)){
-  install.packages("RColorBrewer")
-}
-if(!require(reactable)){
-  install.packages("reactable")
-}
-if(!require(scales)){
-  install.packages("scales")
-}
-if(!require(ggrepel)){
-  install.packages("ggrepel")
-}
-if(!require(ggmosaic)){
-  install.packages("ggmosaic")
-}
-if(!require(patchwork)){
-  install.packages("patchwork")
-}
-path=here()
-if(!require(scindeR)){
-  install.packages(paste0(path,"R/packagesR/scindeR_0.0.0.9000.tar.gz"), repos = NULL, type = "source")
-}
-if(!require(compar)){
-  install.packages(paste0(path,"R/packagesR/compar_0.0.0.9000.tar.gz"), repos = NULL, type = "source")
-}
-# if(!require(PredictionPython)){
-#   install.packages(paste0(path,"/packagesR/PredictionPython_1.0.tar.gz"), repos = NULL, type = "source")
-# }
-if(!require(plotly)){
-  install.packages("plotly")
-}
-if(!require(shinyWidgets)){
-  install.packages("shinyWidgets")
-}
-require(shinyWidgets)
-require(shinydashboard)
-require(shinythemes)
-require(RColorBrewer)
-require(reactable)
-require(scales)
-require(ggrepel)
-require(ggmosaic)
-require(patchwork)
-require(scindeR)#permet de scinder ma data en quanti, quali et binaire.
-require(compar)#permet de comparer les plots.
-require(plotly)
-#require(PredictionPython)
-require(JuliaCall)
-# setwd(path)
-# julia <- julia_setup()
-# 
-# julia_install_package("https://github.com/RobinChaussemy/JuliaPredict.jl.git")
-# julia_library("JuliaPredict")
+## appel/installation des packages requis ##
+source(paste0(path,"/R/packagesR/callPackages.R"))
 
+## palette de couleurs pour les graphiques ##
 palette_couleurs <- brewer.pal(12, "Set3")
+## chargement de la data ##
 dt <- read.csv("https://www.dropbox.com/scl/fi/d3v41yp6x9cxlqvueoet3/membersClean.csv?rlkey=v9xfdgu6oyubjur9rlu6k9eow&dl=1")
-data_quali <- scinde(dt,"quali")
-names_data_quali <- names(data_quali)
-data_quanti <- scinde(dt,"quanti")
-names_data_quanti <- names(data_quanti)
-data_binaire <- scinde(dt,"binaire")
-names_data_binaire <- names(data_binaire)
-
-source("guide.r")
-#a voir
-#data_quanti_names <- toJSON(names(data_quanti))
+## separation de la data selon le type de variable
+names_data <- scinde(dt)
+names_data_quali <- names_data$quali
+names_data_quanti <- names_data$quanti
+names_data_binaire <- names_data$binaire
+source(paste0(path,"/R/guide.r"))
 
 
 
@@ -125,13 +55,13 @@ ui <- dashboardPage(
         sidebarPanel(
           actionBttn(inputId = "guide1",label = "Guide", style = "stretch",color = "primary"),
           h2("Informations requises:"),
-          selectInput("var1", " Choisissez une variable", choices = names(dt)),
+          selectInput("var1", " Choisissez une variable", choices = names_data),
           #conditionalPanel(
           #condition = paste0(toJSON(names_data_quanti),'.includes(input.var1)'),
           radioButtons("bool1", "Souhaitez vous regarder une partie de la population?", choices = c('non', 'oui')),
             conditionalPanel(
               condition = "input.bool1 == 'oui'",
-              selectInput("var_quali", "Variable à discriminer:", choices = names(data_quali)),
+              selectInput("var_quali", "Variable à discriminer:", choices = names_data_quali),
               selectInput("cat1", "Quel partie de la population souhaitez vous regarder?", choices = NULL)
             ),
           #),
@@ -146,7 +76,7 @@ ui <- dashboardPage(
         sidebarPanel(
           actionBttn(inputId = "guide2",label = "Guide", style = "stretch",color = "primary"),
           h2("Informations requises"),
-          selectInput("var2", " Choisissez une variable:", choices = names(data_quanti)),
+          selectInput("var2", " Choisissez une variable:", choices = names_data_quanti),
           selectInput('plot_type', 'Choisissez le type de graphique:', choices = c('Histogram', 'scatterplot','Density','boxplot')),
           conditionalPanel(
             condition = "input.plot_type == 'Histogram'",
@@ -159,16 +89,16 @@ ui <- dashboardPage(
           ),
           conditionalPanel(
             condition = "input.plot_type == 'scatterplot'",
-            selectInput("var3", "Choisissez la seconde variable", choices = names(data_quanti)),
+            selectInput("var3", "Choisissez la seconde variable", choices = names_data_quanti),
             radioButtons("bool2", "Souhaitez vous regarder une partie de la population?", choices = c('non', 'oui')),
             conditionalPanel(
               condition = "input.bool2 == 'oui'",
-              selectInput("var_binaire", "Variable à discriminer:", choices = names(data_binaire))
+              selectInput("var_binaire", "Variable à discriminer:", choices = names_data_binaire)
             )
           ),
           conditionalPanel(
             condition = "input.plot_type == 'Density'",
-            selectInput("var_quali2","Variable à discriminer:",choices = c("Aucune",names(data_quali)))
+            selectInput("var_quali2","Variable à discriminer:",choices = c("Aucune",names_data_quali))
           ),
           actionBttn(inputId = "run2",label = "run", style = "unite",size = "md",color = "royal")
         ),
@@ -195,11 +125,11 @@ ui <- dashboardPage(
         sidebarPanel(
           actionBttn(inputId = "guide3",label = "Guide", style = "stretch",color = "primary"),
           h2("Informations requises"),
-          selectInput("var4", " Choisissez une variable", choices = names(data_quali)),
+          selectInput("var4", " Choisissez une variable", choices = names_data_quali),
           selectInput('plot_type_quali', 'Choisissez le type de graphique:', choices = c('barplot', 'mosaicplot')),
           conditionalPanel(
             condition = "input.plot_type_quali == 'mosaicplot'",
-            selectInput("var5", "Choisissez la 2ème variable", choices = names(data_quali))
+            selectInput("var5", "Choisissez la 2ème variable", choices = names_data_quali)
           ),
           conditionalPanel(
             condition = "input.plot_type_quali == 'barplot'",
@@ -230,12 +160,12 @@ ui <- dashboardPage(
         sidebarPanel(
           actionBttn(inputId = "guide4",label = "Guide", style = "stretch",color = "primary"),
           h2("Informations requises"),
-          selectInput("var6", "Choisissez une variable quantitative:", choices = names(data_quanti)),
-          selectInput("var7", "Choisissez une variable qualitative:", choices = names(data_quali)),
+          selectInput("var6", "Choisissez une variable quantitative:", choices = names_data_quanti),
+          selectInput("var7", "Choisissez une variable qualitative:", choices = names_data_quali),
           selectInput('plot_type_quali_quanti', 'Choisissez le type de graphique:', choices = c('barplot', 'boxplot', 'scatterplot')),
           conditionalPanel(
             condition = "input.plot_type_quali_quanti == 'scatterplot'",
-            selectInput("var8", "Choisissez une deuxième variable quantitative:", choices = names(data_quanti)),
+            selectInput("var8", "Choisissez une deuxième variable quantitative:", choices = names_data_quanti),
             selectInput("cat2", "Sur quel modalité voulez vous discriminer?", choices = NULL)
           ),
           actionBttn(inputId = "run4",label = "run", style = "unite",size = "md",color = "royal")
@@ -334,8 +264,8 @@ guide5$init()
   observe({
     var_qualitative <- input$var_quali
     var_qualitative2 <- input$var7
-    modalites <- levels(as.factor(data_quali[,var_qualitative]))
-    modalites2 <- c("toute la population",levels(as.factor(data_quali[,var_qualitative2])))
+    modalites <- levels(as.factor(df()[,var_qualitative]))
+    modalites2 <- c("toute la population",levels(as.factor(df()[,var_qualitative2])))
     # Mettre à jour les choix des selectInput
     updateSelectInput(session, "cat1", choices = modalites)
     updateSelectInput(session, "cat2", choices = modalites2)
@@ -352,10 +282,10 @@ guide5$init()
 
     
     if(input$plot_type_quali_quanti == "barplot"){
-        updateSelectInput(session,"var6",choices = names(dt),label = "Choisissez une variable:")
+        updateSelectInput(session,"var6",choices = names_data,label = "Choisissez une variable:")
     }
     else{
-        updateSelectInput(session,"var6",choices = names(data_quanti),label = "Choisissez une variable quantitative:")
+        updateSelectInput(session,"var6",choices = names_data_quanti,label = "Choisissez une variable quantitative:")
     }
 
 
