@@ -125,8 +125,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </ul></li>
   <li><a href="#apprentissage-automatique" id="toc-apprentissage-automatique" class="nav-link" data-scroll-target="#apprentissage-automatique"><span class="header-section-number">4</span> Apprentissage automatique</a>
   <ul class="collapse">
-  <li><a href="#python" id="toc-python" class="nav-link" data-scroll-target="#python"><span class="header-section-number">4.1</span> Python</a></li>
-  <li><a href="#julia-1" id="toc-julia-1" class="nav-link" data-scroll-target="#julia-1"><span class="header-section-number">4.2</span> Julia</a></li>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction"><span class="header-section-number">4.1</span> Introduction</a></li>
+  <li><a href="#présentation-des-modèles" id="toc-présentation-des-modèles" class="nav-link" data-scroll-target="#présentation-des-modèles"><span class="header-section-number">4.2</span> Présentation des modèles</a>
+  <ul class="collapse">
+  <li><a href="#onehotencode" id="toc-onehotencode" class="nav-link" data-scroll-target="#onehotencode"><span class="header-section-number">4.2.1</span> OneHotEncode</a></li>
+  <li><a href="#k-nearest-neighbour" id="toc-k-nearest-neighbour" class="nav-link" data-scroll-target="#k-nearest-neighbour"><span class="header-section-number">4.2.2</span> K-Nearest Neighbour</a></li>
+  <li><a href="#randomforest" id="toc-randomforest" class="nav-link" data-scroll-target="#randomforest"><span class="header-section-number">4.2.3</span> RandomForest</a></li>
+  </ul></li>
+  <li><a href="#mise-en-place-des-méthodes" id="toc-mise-en-place-des-méthodes" class="nav-link" data-scroll-target="#mise-en-place-des-méthodes"><span class="header-section-number">4.3</span> Mise en place des méthodes</a>
+  <ul class="collapse">
+  <li><a href="#difficultés" id="toc-difficultés" class="nav-link" data-scroll-target="#difficultés"><span class="header-section-number">4.3.1</span> Difficultés</a></li>
+  </ul></li>
+  <li><a href="#julia-1" id="toc-julia-1" class="nav-link" data-scroll-target="#julia-1"><span class="header-section-number">4.4</span> Julia</a>
+  <ul class="collapse">
+  <li><a href="#difficultés-1" id="toc-difficultés-1" class="nav-link" data-scroll-target="#difficultés-1"><span class="header-section-number">4.4.1</span> Difficultés</a></li>
+  </ul></li>
   </ul></li>
   <li><a href="#interface-shiny" id="toc-interface-shiny" class="nav-link" data-scroll-target="#interface-shiny"><span class="header-section-number">5</span> Interface Shiny</a>
   <ul class="collapse">
@@ -422,9 +435,9 @@ W = 0.97155, p-value &lt; 2.2e-16</code></pre>
 </div>
 <p>les deux tests rejettent <span class="math inline">\(\mathcal{H}_0\)</span> à un seuil bien plus bas que 1%, on peut sans trop de risque affirmer que nos deux groupes suivent une loi normale et donc procéder à un test de student.</p>
 <p>Hypothèse:<br>
-<span class="math inline">\(\mathcal{H}_0\)</span>: <span class="math inline">\(\mu_1=\mu2 \Leftrightarrow\)</span> “La moyenne d’age des individus est le même qu’il réussisse ou non l’expédition.<br>
+<span class="math inline">\(\mathcal{H}_0\)</span>: <span class="math inline">\(\mu_1=\mu_2 \Leftrightarrow\)</span> “La moyenne d’age des individus est le même qu’il réussisse ou non l’expédition.<br>
 vs<br>
-<span class="math inline">\(\mathcal{H}_1\)</span>: <span class="math inline">\(\mu_1&gt;\mu2 \Leftrightarrow\)</span>”La moyenne d’age des individus est différente selon qu’il réussisse ou non l’expédition.</p>
+<span class="math inline">\(\mathcal{H}_1\)</span>: <span class="math inline">\(\mu_1&gt;\mu_2 \Leftrightarrow\)</span>”La moyenne d’age des individus est différente selon qu’il réussisse ou non l’expédition.</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>
@@ -446,11 +459,78 @@ mean in group false  mean in group true
 </section>
 <section id="apprentissage-automatique" class="level1" data-number="4">
 <h1 data-number="4"><span class="header-section-number">4</span> Apprentissage automatique</h1>
-<section id="python" class="level2" data-number="4.1">
-<h2 data-number="4.1" class="anchored" data-anchor-id="python"><span class="header-section-number">4.1</span> Python</h2>
+<section id="introduction" class="level2" data-number="4.1">
+<h2 data-number="4.1" class="anchored" data-anchor-id="introduction"><span class="header-section-number">4.1</span> Introduction</h2>
+<p>Dans ce projet, nous avons choisi de comparer la mise en place de méthodes d’apprentissage supervisé en les implémentant en Julia et Python pour les évaluer. Les deux méthodes que nous avons choisies sont RandomForest (RF) et K-Nearest Neighbour (KNN). Notre choix s’est porté sur ces deux dernières car nous les avons étudiées l’année passée dans un cours d’introduction au machine learning. Un autre facteur qui nous a poussés à choisir ces deux algorithmes est qu’ils utilisent le même prétraitement pour les données à l’entrée de l’algorithme.</p>
 </section>
-<section id="julia-1" class="level2" data-number="4.2">
-<h2 data-number="4.2" class="anchored" data-anchor-id="julia-1"><span class="header-section-number">4.2</span> Julia</h2>
+<section id="présentation-des-modèles" class="level2" data-number="4.2">
+<h2 data-number="4.2" class="anchored" data-anchor-id="présentation-des-modèles"><span class="header-section-number">4.2</span> Présentation des modèles</h2>
+<section id="onehotencode" class="level3" data-number="4.2.1">
+<h3 data-number="4.2.1" class="anchored" data-anchor-id="onehotencode"><span class="header-section-number">4.2.1</span> OneHotEncode</h3>
+<p>Le OneHotEncode (OHE) a pour objectif d’encoder les variables catégorielles en une matrice unitaire.</p>
+<section id="exemple" class="level4" data-number="4.2.1.1">
+<h4 data-number="4.2.1.1" class="anchored" data-anchor-id="exemple"><span class="header-section-number">4.2.1.1</span> Exemple</h4>
+<p>On observe 4 individus en notant leur sexe et la nature de leur contrat de travail:</p>
+<style type="text/css">
+.tg  {border-collapse:collapse;border-spacing:0;}
+.tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg .tg-0pky{border-color:inherit;text-align:left;vertical-align:top}
+</style>
+<p>Après passage dans le OneHotEncoder, on obtient la matrice suivante:</p>
+<style type="text/css">
+.tg  {border-collapse:collapse;border-spacing:0;}
+.tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg .tg-0lax{text-align:left;vertical-align:top}
+</style>
+<p>Maintenant, nous pouvons appliquer des opérations mathématiques sur la matrice obtenue, comme calculer des effectifs de façon simple ou des distances entre les individus. Cependant, le OneHotEncoder présente un inconvénient majeur, car il augmente énormément le nombre de colonnes de la matrice de base si les variables contiennent beaucoup de catégories.</p>
+</section>
+</section>
+<section id="k-nearest-neighbour" class="level3" data-number="4.2.2">
+<h3 data-number="4.2.2" class="anchored" data-anchor-id="k-nearest-neighbour"><span class="header-section-number">4.2.2</span> K-Nearest Neighbour</h3>
+<p>Soit (k + 1). Une fois notre matrice de données et l’individu passé dans le OHE, on calcule la distance de notre individu par rapport à chaque ligne de la matrice de données, et on obtient une nouvelle matrice appelée matrice de distance. On regarde les (k) distances les plus faibles pour identifier les (k) individus qui ressemblent le plus. On observe les (k) valeurs des données à prédire et on attribue par la suite à notre individu à prédire la classe qui le représente.</p>
+</section>
+<section id="randomforest" class="level3" data-number="4.2.3">
+<h3 data-number="4.2.3" class="anchored" data-anchor-id="randomforest"><span class="header-section-number">4.2.3</span> RandomForest</h3>
+<p>Les forêts aléatoires reposent sur la construction d’arbres de décision de manière itérative. Elles se décomposent en plusieurs étapes:</p>
+<ol type="1">
+<li><p>Création des arbres : La Random Forest commence par créer un ensemble d’arbres de décision. Chaque arbre est formé sur un sous-ensemble aléatoire des données d’entraînement.</p></li>
+<li><p>Prédiction des arbres : Une fois les arbres entraînés, une prédiction est obtenue en faisant voter tous les arbres. Pour une classification, chaque arbre “vote” pour une classe, et la classe qui obtient le plus de votes est choisie comme prédiction finale.</p></li>
+<li><p>Réduction de la corrélation : L’une des forces de la forêt aléatoire est de grandement limiter la corrélation, car chaque arbre est entraîné sur une petite partie du jeu de données.</p></li>
+</ol>
+</section>
+</section>
+<section id="mise-en-place-des-méthodes" class="level2" data-number="4.3">
+<h2 data-number="4.3" class="anchored" data-anchor-id="mise-en-place-des-méthodes"><span class="header-section-number">4.3</span> Mise en place des méthodes</h2>
+<p>Python étant actuellement un langage de référence dans le monde du machine learning, il existe un package bien pratique contenant tous les outils nécessaires à l’apprentissage supervisé. Ce package est Scikit-learn. Pour bien fonctionner, il s’appuie sur le package NumPy qui permet de manipuler les objets mathématiques de base.</p>
+<section id="difficultés" class="level3" data-number="4.3.1">
+<h3 data-number="4.3.1" class="anchored" data-anchor-id="difficultés"><span class="header-section-number">4.3.1</span> Difficultés</h3>
+<p>Nous n’avons pas rencontré de difficultés particulières avec l’utilisation de ces packages en raison de notre familiarité avec ces manipulations. Le gros avantage de Python par rapport à Julia est que le langage est assez permissif en ce qui concerne la structure des données au niveau du prétraitement et que toutes les fonctionnalités sont incorporées dans un seul package, contrairement à Julia, comme nous le détaillerons par la suite.</p>
+</section>
+</section>
+<section id="julia-1" class="level2" data-number="4.4">
+<h2 data-number="4.4" class="anchored" data-anchor-id="julia-1"><span class="header-section-number">4.4</span> Julia</h2>
+<p>Julia étant un langage de programmation plus jeune que Python, la partie machine learning n’est pas simple à prendre en main en tant qu’utilisateur. Nous détaillerons par la suite les difficultés rencontrées. Cependant, le package MLJ.jl me paraît très prometteur car il essaye de réunir toutes les fonctionnalités de machine learning, tout comme le fait Scikit-learn (qui possède une version Julia qui n’est pas encore à la hauteur selon moi).</p>
+<section id="difficultés-1" class="level3" data-number="4.4.1">
+<h3 data-number="4.4.1" class="anchored" data-anchor-id="difficultés-1"><span class="header-section-number">4.4.1</span> Difficultés</h3>
+<section id="onehotencoder" class="level4" data-number="4.4.1.1">
+<h4 data-number="4.4.1.1" class="anchored" data-anchor-id="onehotencoder"><span class="header-section-number">4.4.1.1</span> OneHotEncoder</h4>
+<p>Dans un premier temps, contrairement à Python, le OHE de MLJ.jl ne nous a pas permis de transformer un vecteur (individu à prédire) en utilisant la fonction transform, qui devrait normalement fonctionner après avoir adapté notre modèle aux données. Pour remédier à ce problème, nous avons choisi d’ajouter l’individu à prédire en dernière place des données à transformer via le OHE, en utilisant la fonction fit!. Une autre difficulté a été de mettre les dataframes au bon format pour pouvoir utiliser le OHE. Pour cela, nous avons utilisé la fonction coerce, qui permet de transformer les colonnes de type String64 en Multiclass, ce type étant pris en charge par notre OHE.</p>
+</section>
+<section id="k-nearest-neighbour-1" class="level4" data-number="4.4.1.2">
+<h4 data-number="4.4.1.2" class="anchored" data-anchor-id="k-nearest-neighbour-1"><span class="header-section-number">4.4.1.2</span> K-Nearest Neighbour</h4>
+<p>Pour utiliser la prédiction via un KNN en plus du package MLJ.jl, nous avons aussi utilisé NearestNeighbors. Pas de difficulté particulière, sauf un petit problème sur une transposition de matrice qui augmentait grandement le temps de calcul. On passait du calcul de normes dans (^{60}) à une norme dans (^{7300}), ce qui explique pourquoi la matrice de distance prenait presque 1h à être calculée.</p>
+</section>
+<section id="randomforest-1" class="level4" data-number="4.4.1.3">
+<h4 data-number="4.4.1.3" class="anchored" data-anchor-id="randomforest-1"><span class="header-section-number">4.4.1.3</span> RandomForest</h4>
+<p>La méthode qui nous aura pris le plus de temps à mettre en œuvre est le RandomForest, car le package MLJ propose plusieurs implantations de RandomForest provenant de packages variés. Dans un premier temps, nous avons testé avec l’interface de Scikit-learn, mais elle appelait Python en interne, ce qui perd de l’intérêt pour notre comparaison. Nous avons donc opté pour la librairie DecisionTree, qui était disponible dans les modèles. Cependant, nous avons rencontré quelques petites difficultés comme .fit et .predict qui sont définis dans les deux packages, ce qui produisait l’erreur “MethodError: no method matching” alors que l’on utilisait les mêmes types que ceux spécifiés dans la documentation. Pour remédier à ce problème, nous avons simplement remplacé .fit et .predict par DecisionTree.fit et DecisionTree.predict quand cela était nécessaire.</p>
+</section>
+</section>
 </section>
 </section>
 <section id="interface-shiny" class="level1" data-number="5">
@@ -624,6 +704,21 @@ Ce package permet à l’aide d’un script r de préciser les emplacements de c
 </figure>
 </div>
 </section>
+<section id="ajout-de-linterface-dans-un-package-golem" class="level4" data-number="5.4.1.5">
+<h4 data-number="5.4.1.5" class="anchored" data-anchor-id="ajout-de-linterface-dans-un-package-golem"><span class="header-section-number">5.4.1.5</span> Ajout de l’interface dans un package golem</h4>
+<p>Après avoir réalisé une interface, j’ai réalisé que son utilisation par d’autres personnes n’était pas optimisé. Ce qui pourrait être intéréssant serait de n’avoir qu’une commande ou un fichier à installer puis une seule commande pour lancer l’appli, quel que soit l’endroit ou l’on se trouve: c’est là qu’entre en jeu <code>golem</code>.<br>
+golem est un package R permettant de créer une interface shiny en tant que package. Lors de la création d’une application shiny sous golem, un ensemble de fichiers sont crées permettant la facilitation de production de l’interface. Suite à la création du package, il suffit d’installer ce package puis de lancer <code>mon_package::run_app()</code> et l’application se lance.<br>
+En plus de cela, golem permet de séparer l’application en différents modules pour permettre aux développeurs de mieux s’y retrouver et faciliter un travail d’équipe (la lecture de cette dernière s’en retrouve également simplifiée). Bien que son utilisation est facilitée par les nombreuses aides présentes à l’intérieur du package, celle ci reste bien plus complexe à mettre en place au premier abord qu’une simple interface.<br>
+Mais une fois pris en main, golem offre de nombreux avantages!<br>
+Pour ma part et pour cette interface, j’ai tenté d’intégrer mon interface dans un package golem en la séparant en plusieurs modules:</p>
+<ul>
+<li>un module par onglet/tab</li>
+<li>un module pour le body</li>
+<li>un module pour le style du body</li>
+<li>un module pour le sidebar</li>
+</ul>
+<p>En revanche je n’ai pas encore à ce jour réussi à implémenter correctement ma partie serveur par module et celle ci se retrouve donc entièrement dans le fichier <code>app_server.R</code>.</p>
+</section>
 </section>
 </section>
 <section id="création-de-packages" class="level2" data-number="5.5">
@@ -721,7 +816,7 @@ Voir le code
 </div>
 <div class="cell-output-display">
 <div class="plotly html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-166ae35185297e61cd5c" style="width:100%;height:464px;"></div>
-<script type="application/json" data-for="htmlwidget-166ae35185297e61cd5c">{"x":{"visdat":{"1910907342":["function () ","plotlyVisDat"]},"cur_data":"1910907342","attrs":{"1910907342":{"x":{},"xbins":{"size":0.60000000000000009},"marker":{"color":"red"},"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"type":"histogram"}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"xaxis":{"domain":[0,1],"automargin":true,"title":"Sepal.Length"},"yaxis":{"domain":[0,1],"automargin":true},"hovermode":"closest","showlegend":false},"source":"A","config":{"modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"data":[{"x":[5.0999999999999996,4.9000000000000004,4.7000000000000002,4.5999999999999996,5,5.4000000000000004,4.5999999999999996,5,4.4000000000000004,4.9000000000000004,5.4000000000000004,4.7999999999999998,4.7999999999999998,4.2999999999999998,5.7999999999999998,5.7000000000000002,5.4000000000000004,5.0999999999999996,5.7000000000000002,5.0999999999999996,5.4000000000000004,5.0999999999999996,4.5999999999999996,5.0999999999999996,4.7999999999999998,5,5,5.2000000000000002,5.2000000000000002,4.7000000000000002,4.7999999999999998,5.4000000000000004,5.2000000000000002,5.5,4.9000000000000004,5,5.5,4.9000000000000004,4.4000000000000004,5.0999999999999996,5,4.5,4.4000000000000004,5,5.0999999999999996,4.7999999999999998,5.0999999999999996,4.5999999999999996,5.2999999999999998,5,7,6.4000000000000004,6.9000000000000004,5.5,6.5,5.7000000000000002,6.2999999999999998,4.9000000000000004,6.5999999999999996,5.2000000000000002,5,5.9000000000000004,6,6.0999999999999996,5.5999999999999996,6.7000000000000002,5.5999999999999996,5.7999999999999998,6.2000000000000002,5.5999999999999996,5.9000000000000004,6.0999999999999996,6.2999999999999998,6.0999999999999996,6.4000000000000004,6.5999999999999996,6.7999999999999998,6.7000000000000002,6,5.7000000000000002,5.5,5.5,5.7999999999999998,6,5.4000000000000004,6,6.7000000000000002,6.2999999999999998,5.5999999999999996,5.5,5.5,6.0999999999999996,5.7999999999999998,5,5.5999999999999996,5.7000000000000002,5.7000000000000002,6.2000000000000002,5.0999999999999996,5.7000000000000002,6.2999999999999998,5.7999999999999998,7.0999999999999996,6.2999999999999998,6.5,7.5999999999999996,4.9000000000000004,7.2999999999999998,6.7000000000000002,7.2000000000000002,6.5,6.4000000000000004,6.7999999999999998,5.7000000000000002,5.7999999999999998,6.4000000000000004,6.5,7.7000000000000002,7.7000000000000002,6,6.9000000000000004,5.5999999999999996,7.7000000000000002,6.2999999999999998,6.7000000000000002,7.2000000000000002,6.2000000000000002,6.0999999999999996,6.4000000000000004,7.2000000000000002,7.4000000000000004,7.9000000000000004,6.4000000000000004,6.2999999999999998,6.0999999999999996,7.7000000000000002,6.2999999999999998,6.4000000000000004,6,6.9000000000000004,6.7000000000000002,6.9000000000000004,5.7999999999999998,6.7999999999999998,6.7000000000000002,6.7000000000000002,6.2999999999999998,6.5,6.2000000000000002,5.9000000000000004],"xbins":{"size":0.60000000000000009},"marker":{"color":"red","line":{"color":"rgba(31,119,180,1)"}},"type":"histogram","error_y":{"color":"rgba(31,119,180,1)"},"error_x":{"color":"rgba(31,119,180,1)"},"xaxis":"x","yaxis":"y","frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+<script type="application/json" data-for="htmlwidget-166ae35185297e61cd5c">{"x":{"visdat":{"25543cdc536d":["function () ","plotlyVisDat"]},"cur_data":"25543cdc536d","attrs":{"25543cdc536d":{"x":{},"xbins":{"size":0.60000000000000009},"marker":{"color":"red"},"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"type":"histogram"}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"xaxis":{"domain":[0,1],"automargin":true,"title":"Sepal.Length"},"yaxis":{"domain":[0,1],"automargin":true},"hovermode":"closest","showlegend":false},"source":"A","config":{"modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"data":[{"x":[5.0999999999999996,4.9000000000000004,4.7000000000000002,4.5999999999999996,5,5.4000000000000004,4.5999999999999996,5,4.4000000000000004,4.9000000000000004,5.4000000000000004,4.7999999999999998,4.7999999999999998,4.2999999999999998,5.7999999999999998,5.7000000000000002,5.4000000000000004,5.0999999999999996,5.7000000000000002,5.0999999999999996,5.4000000000000004,5.0999999999999996,4.5999999999999996,5.0999999999999996,4.7999999999999998,5,5,5.2000000000000002,5.2000000000000002,4.7000000000000002,4.7999999999999998,5.4000000000000004,5.2000000000000002,5.5,4.9000000000000004,5,5.5,4.9000000000000004,4.4000000000000004,5.0999999999999996,5,4.5,4.4000000000000004,5,5.0999999999999996,4.7999999999999998,5.0999999999999996,4.5999999999999996,5.2999999999999998,5,7,6.4000000000000004,6.9000000000000004,5.5,6.5,5.7000000000000002,6.2999999999999998,4.9000000000000004,6.5999999999999996,5.2000000000000002,5,5.9000000000000004,6,6.0999999999999996,5.5999999999999996,6.7000000000000002,5.5999999999999996,5.7999999999999998,6.2000000000000002,5.5999999999999996,5.9000000000000004,6.0999999999999996,6.2999999999999998,6.0999999999999996,6.4000000000000004,6.5999999999999996,6.7999999999999998,6.7000000000000002,6,5.7000000000000002,5.5,5.5,5.7999999999999998,6,5.4000000000000004,6,6.7000000000000002,6.2999999999999998,5.5999999999999996,5.5,5.5,6.0999999999999996,5.7999999999999998,5,5.5999999999999996,5.7000000000000002,5.7000000000000002,6.2000000000000002,5.0999999999999996,5.7000000000000002,6.2999999999999998,5.7999999999999998,7.0999999999999996,6.2999999999999998,6.5,7.5999999999999996,4.9000000000000004,7.2999999999999998,6.7000000000000002,7.2000000000000002,6.5,6.4000000000000004,6.7999999999999998,5.7000000000000002,5.7999999999999998,6.4000000000000004,6.5,7.7000000000000002,7.7000000000000002,6,6.9000000000000004,5.5999999999999996,7.7000000000000002,6.2999999999999998,6.7000000000000002,7.2000000000000002,6.2000000000000002,6.0999999999999996,6.4000000000000004,7.2000000000000002,7.4000000000000004,7.9000000000000004,6.4000000000000004,6.2999999999999998,6.0999999999999996,7.7000000000000002,6.2999999999999998,6.4000000000000004,6,6.9000000000000004,6.7000000000000002,6.9000000000000004,5.7999999999999998,6.7999999999999998,6.7000000000000002,6.7000000000000002,6.2999999999999998,6.5,6.2000000000000002,5.9000000000000004],"xbins":{"size":0.60000000000000009},"marker":{"color":"red","line":{"color":"rgba(31,119,180,1)"}},"type":"histogram","error_y":{"color":"rgba(31,119,180,1)"},"error_x":{"color":"rgba(31,119,180,1)"},"xaxis":"x","yaxis":"y","frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
 </div>
 </div>
 Chacun de ces graphiques se retrouve implémenter dans une des trois fonctions représentant les catégories.<br>
@@ -816,6 +911,13 @@ Voir le code
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(data, <span class="fu">aes</span>(<span class="at">x =</span> year, <span class="at">y =</span> age)) <span class="sc">+</span> <span class="fu">geom_point</span>()</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplotly</span>(p <span class="sc">+</span> <span class="fu">aes</span>(<span class="at">frame =</span> citizenship)) <span class="sc">|&gt;</span> <span class="fu">animation_opts</span>(<span class="at">frame =</span> <span class="dv">1500</span>, <span class="at">transition =</span> <span class="dv">500</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<ul>
+<li>rendre l’interface réellement utilisable pour n’importe quel jeu de donnée. Il suffit pour cela d’ajouter la possibilité au sein de l’interface de pouvoir importer un jeu de donnée, l’interface étant déjà codé pour n’importe quelle jeu de donnée au format csv.<br>
+</li>
+<li>déployer l’interface sur un serveur afin qu’elle soit accessible directement depuis un lien.<br>
+</li>
+<li>travailler l’esthétique de l’interface avec du CCS pour la rendre plus lisible et plus accessible.</li>
+</ul>
 </section>
 <section id="packages" class="level3" data-number="6.3.3">
 <h3 data-number="6.3.3" class="anchored" data-anchor-id="packages"><span class="header-section-number">6.3.3</span> packages</h3>
@@ -837,7 +939,7 @@ Permettre d’automatiser le machine learning dans l’inerface pour n’importe
 <ul>
 <li><code>ggplot2</code>,<code>plotly</code> et de leurs grammaire pour ce qui est de la visualisation statistique.</li>
 <li><code>shiny</code> pour ce qui est de la création d’interface.</li>
-<li><code>quarto</code>pour la création de rapport statistiques et de la présentation.</li>
+<li><code>quarto</code> pour la création de rapport statistiques et de la présentation.</li>
 <li>les packages permettant d’appeler du code Julia et Python au sein du language R.</li>
 </ul>
 <p>Mais également dans l’apprentissage d’un nouveau language <code>Julia</code> et de ses fonctionnalités.<br>

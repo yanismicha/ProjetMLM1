@@ -454,6 +454,21 @@ Ce package permet à l'aide d'un script r de préciser les emplacements de chaqu
 
 ![Guide](Rapport_projet_files/guide2.png)
 
+#### Ajout de l'interface dans un package golem
+Après avoir réalisé une interface, j'ai réalisé que son utilisation par d'autres personnes n'était pas optimisé. Ce qui pourrait être intéréssant serait de n'avoir qu'une commande ou un fichier à installer puis une seule commande pour lancer l'appli, quel que soit l'endroit ou l'on se trouve: c'est là qu'entre en jeu `golem`.  
+golem est un package R permettant de créer une interface shiny en tant que package. Lors de la création d'une application shiny sous golem, un ensemble de fichiers sont crées permettant la facilitation de production de l'interface. Suite à la création du package, il suffit d'installer ce package puis de lancer `mon_package::run_app()` et l'application se lance.  
+En plus de cela, golem permet de séparer l'application en  différents modules pour permettre aux développeurs de mieux s'y retrouver et faciliter un travail d'équipe (la lecture de cette dernière s'en retrouve également simplifiée).
+Bien que son utilisation est facilitée par les nombreuses aides présentes à l'intérieur du package, celle ci reste bien plus complexe à mettre en place au premier abord qu'une simple interface.  
+Mais une fois pris en main, golem offre de  nombreux avantages!  
+Pour ma part et pour cette interface, j'ai tenté d'intégrer mon interface dans un package golem en la séparant en plusieurs modules:
+
+- un module par onglet/tab
+- un module pour le body
+- un module pour le style du body
+- un module pour le sidebar
+
+En revanche je n'ai pas encore à ce jour réussi à implémenter correctement ma partie serveur par module et celle ci se retrouve donc entièrement dans le fichier `app_server.R`.
+
 
 
 ## Création de packages
