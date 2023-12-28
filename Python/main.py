@@ -5,6 +5,8 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 import time as tm
+import warnings
+warnings.filterwarnings("ignore")
 
 data = pd.read_csv("../DataSets/membersClean.csv")
 target = data.success
@@ -57,6 +59,7 @@ def PredictKNN(indiv,dataencode,y,p = 3,n = 11):
     res_predi = KNN.predict(indiv)
     prob_predi = KNN.predict_proba(indiv)
     return [res_predi[0],prob_predi[0][0],prob_predi[0][1]]
+  
 def PredictForest(data,X,indiv,n = 2):
     random_forest = RandomForestClassifier(criterion = "gini",n_estimators = n)
     target = data.success
